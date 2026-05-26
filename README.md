@@ -1,7 +1,7 @@
 # WallpaperEngine-Linux (ColorWall for Linux By Laxenta)
 
 ### An open-source, ultra-lightweight live wallpaper and desktop customization engine for Linux systems, built using Rust and Tauri.
-> we have a proprietary project for windows, https://colorwall.xyz (in future it will be plan to change it to moe or something funny haha)
+> we have a proprietary project for windows, https://colorwall.xyz (in future it will be plan to change it to moe or something funny haha, it will host both of this versions of colorwall, both platforms, maybe macos in future too)
 ## Project Status: Target Mid-June 2026
 This repository is currently a placeholder skeleton. Active code development and repository initialization are scheduled to begin in mid-June 2026, aligning with the official Microsoft Store release of the Windows client.
 Take it all with a grain of salt, i know what to do but full research will help the score and plan more! i am busy a little for now, so yea! i will do it soon!

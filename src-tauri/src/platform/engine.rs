@@ -1,4 +1,4 @@
-// engine — spawns and manages the cl-video-player sidecar binary
+// engine, spawns and manages the cl-video-player sidecar binary
 //
 // mirrors the windows engine.rs pattern: the tauri app doesn't render
 // the wallpaper itself. it spawns a separate process (cl-video-player)
@@ -23,6 +23,7 @@ lazy_static::lazy_static! {
 struct PlayerProcess {
     child: Child,
     socket_path: String,
+    #[allow(dead_code)]
     video_path: String,
 }
 
@@ -52,18 +53,28 @@ pub fn set_video_wallpaper(
         .ok_or("failed to get exe parent dir")?
         .to_path_buf();
 
-    let player_path = exe_dir.join("cl-video-player");
+    // on linux the binary has no extension, on windows it would be .exe
+    let player_name = if cfg!(target_os = "windows") {
+        "cl-video-player.exe"
+    } else {
+        "cl-video-player"
+    };
+    let player_path = exe_dir.join(player_name);
+
+    // during development, the binary might not exist yet
     if !player_path.exists() {
+        println!(
+            "[engine] warning: cl-video-player not found at {}, skipping",
+            player_path.display()
+        );
         return Err(format!(
-            "cl-video-player not found at {}",
+            "cl-video-player not found at {} (build it with: cargo build --bin cl-video-player)",
             player_path.display()
         ));
     }
 
-    // unix domain socket path for ipc
-    let runtime_dir = std::env::var("XDG_RUNTIME_DIR")
-        .unwrap_or_else(|_| "/tmp".to_string());
-    let socket_path = format!("{}/colorwall-player-{}.sock", runtime_dir, target);
+    // socket path for ipc (unix domain socket on linux, tcp on windows for dev)
+    let socket_path = get_socket_path(target);
 
     // clean up stale socket file
     let _ = std::fs::remove_file(&socket_path);
@@ -142,20 +153,48 @@ pub fn stop_wallpaper_on_monitor(monitor_id: &str) {
     }
 }
 
-/// send a command to a player process over its unix domain socket
-fn send_ipc_command(socket_path: &str, command: &str) {
-    use std::io::Write;
-    use std::os::unix::net::UnixStream;
+/// get the socket path for a monitor's player ipc
+fn get_socket_path(monitor_id: &str) -> String {
+    if cfg!(target_os = "linux") {
+        // use XDG_RUNTIME_DIR on linux (typically /run/user/1000/)
+        let runtime_dir = std::env::var("XDG_RUNTIME_DIR")
+            .unwrap_or_else(|_| "/tmp".to_string());
+        format!("{}/colorwall-player-{}.sock", runtime_dir, monitor_id)
+    } else {
+        // fallback for windows development: use temp dir
+        let tmp = std::env::temp_dir();
+        format!(
+            "{}\\colorwall-player-{}.sock",
+            tmp.display(),
+            monitor_id
+        )
+    }
+}
 
-    match UnixStream::connect(socket_path) {
-        Ok(mut stream) => {
-            let msg = format!("{}\n", command);
-            let _ = stream.write_all(msg.as_bytes());
-            let _ = stream.flush();
+/// send a command to a player process over ipc
+fn send_ipc_command(socket_path: &str, command: &str) {
+    // on linux: unix domain socket
+    // on windows (dev only): just log it
+    #[cfg(target_os = "linux")]
+    {
+        use std::io::Write;
+        use std::os::unix::net::UnixStream;
+
+        match UnixStream::connect(socket_path) {
+            Ok(mut stream) => {
+                let msg = format!("{}\n", command);
+                let _ = stream.write_all(msg.as_bytes());
+                let _ = stream.flush();
+            }
+            Err(e) => {
+                println!("[engine] ipc send to '{}': {}", socket_path, e);
+            }
         }
-        Err(e) => {
-            // not an error if the player already exited
-            println!("[engine] ipc send to '{}': {}", socket_path, e);
-        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        // dev stub: just log the command
+        println!("[engine] ipc stub (not linux): {} -> {}", socket_path, command);
     }
 }

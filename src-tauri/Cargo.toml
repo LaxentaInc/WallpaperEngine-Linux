@@ -63,8 +63,8 @@ futures-util = "0.3"
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
 
-# --- linux-specific ---
-# dbus for mpris media session, desktop notifications, etc.
+# --- linux-specific (only compiled on linux) ---
+[target.'cfg(target_os = "linux")'.dependencies]
 zbus = "5"
 
 [profile.dev]

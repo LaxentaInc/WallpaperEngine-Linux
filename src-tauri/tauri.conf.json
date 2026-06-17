@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "colorwall-linux",
+  "productName": "ColorWall",
   "version": "0.1.0",
   "identifier": "com.laxenta.colorwall-linux",
   "build": {
@@ -10,26 +10,48 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "colorwall-linux",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "ColorWall - Linux Desktop Wallpaper Engine",
+        "width": 1200,
+        "height": 950,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "visible": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "publisher": "Laxenta Inc",
+    "targets": ["deb", "rpm", "appimage"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
-    ]
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libmpv2"]
+      },
+      "rpm": {
+        "depends": ["webkit2gtk4.1", "mpv-libs"]
+      }
+    }
   }
 }

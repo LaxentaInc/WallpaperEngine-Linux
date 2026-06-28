@@ -10,9 +10,9 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             // -- platform commands --
-            colorwall_linux_lib::platform::cmd_set_video_wallpaper,
-            colorwall_linux_lib::platform::cmd_stop_wallpaper,
-            colorwall_linux_lib::platform::cmd_get_display_info,
+            colorwall_linux::platform::cmd_set_video_wallpaper,
+            colorwall_linux::platform::cmd_stop_wallpaper,
+            colorwall_linux::platform::cmd_get_display_info,
         ])
         .setup(|app| {
             println!("[colorwall] starting colorwall linux v{}", env!("CARGO_PKG_VERSION"));
@@ -33,7 +33,7 @@ fn main() {
             let _ = window.show();
 
             // detect display server and log it
-            let display_info = colorwall_linux_lib::platform::detect_display_server();
+            let display_info = colorwall_linux::platform::detect_display_server();
             println!("[colorwall] display server: {:?}", display_info);
 
             Ok(())

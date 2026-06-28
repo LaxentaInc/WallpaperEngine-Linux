@@ -1,0 +1,34 @@
+laxenta@laxenta-virtualbox:~/wallpaperengine-local$ pnpm tauri dev
+$ tauri dev
+     Running BeforeDevCommand (`pnpm dev`)
+        Warn Waiting for your frontend dev server to start on http://localhost:1420/...
+$ vite
+        Warn Waiting for your frontend dev server to start on http://localhost:1420/...
+
+  VITE v7.3.5  ready in 2168 ms
+
+  ➜  Local:   http://localhost:1420/
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching /home/laxenta/wallpaperengine-local/src-tauri for changes...
+   Compiling tauri v2.11.2
+   Compiling colorwall-linux v0.1.0 (/home/laxenta/wallpaperengine-local/src-tauri)
+error: failed to run custom build command for `colorwall-linux v0.1.0 (/home/laxenta/wallpaperengine-local/src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `/home/laxenta/wallpaperengine-local/src-tauri/target/debug/build/colorwall-linux-e7e0aba8e5de3e37/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rerun-if-changed=/home/laxenta/wallpaperengine-local/src-tauri/tauri.conf.json
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=colorwall_linux
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=com_laxenta
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+
+        The `tauri` dependency features on the `Cargo.toml` file does not match the allowlist defined under `tauri.conf.json`.
+        Please run `tauri dev` or `tauri build` or add the `protocol-asset` feature.
+      
+warning: build failed, waiting for other jobs to finish...
+    Building [=======================> ] 423/426: tauri  

@@ -1,5 +1,8 @@
-// colorwall linux — main entry point
-// the tauri application lifecycle and window management
+// colorwall linux - main tauri entry point
+//
+// this is the thinnest possible entry point. it wires up tauri plugins,
+// registers UI commands, and starts the app. all logic lives in the
+// library modules (core/, platform/, ui/).
 
 use tauri::Manager;
 
@@ -9,17 +12,20 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
-            // -- platform commands --
-            colorwall_linux::platform::cmd_set_video_wallpaper,
-            colorwall_linux::platform::cmd_stop_wallpaper,
-            colorwall_linux::platform::cmd_get_display_info,
+            // commands re-exported from ui/mod.rs for clean access
+            colorwall_linux_lib::ui::cmd_set_video_wallpaper,
+            colorwall_linux_lib::ui::cmd_stop_wallpaper,
+            colorwall_linux_lib::ui::cmd_get_display_info,
         ])
         .setup(|app| {
-            println!("[colorwall] starting colorwall linux v{}", env!("CARGO_PKG_VERSION"));
+            println!(
+                "[colorwall] starting colorwall linux v{}",
+                env!("CARGO_PKG_VERSION")
+            );
 
             let window = app.get_webview_window("main").unwrap();
 
-            // hide on close (same pattern as windows version)
+            // hide on close instead of quitting (same pattern as windows version)
             let window_clone = window.clone();
             window.on_window_event(move |event| {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -29,12 +35,11 @@ fn main() {
                 }
             });
 
-            // show the window once the frontend is ready
             let _ = window.show();
 
-            // detect display server and log it
-            let display_info = colorwall_linux::platform::detect_display_server();
-            println!("[colorwall] display server: {:?}", display_info);
+            // detect and log the compositor at startup
+            let shell = colorwall_linux_lib::platform::linux::shared::detection::detect();
+            println!("[colorwall] detected shell: {:?}", shell);
 
             Ok(())
         })

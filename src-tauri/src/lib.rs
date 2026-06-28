@@ -1,5 +1,7 @@
-// colorwall linux — library root
-// mirrors the windows version's modular architecture
+// colorwall linux - library root
+//
+// re-exports every module for both the main tauri binary
+// and the sidecar binaries to import from.
 
 pub mod core;
 pub mod data;

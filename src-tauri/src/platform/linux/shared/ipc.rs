@@ -1,22 +1,23 @@
-// ipc — unix domain socket protocol for sidecar communication
+// ipc - unix domain socket communication between tauri app and sidecar
 //
-// replaces windows named pipes with unix domain sockets.
-// same line-based text protocol: command\n
+// the main tauri app (ui_app) spawns cl-video-player as a separate process.
+// they communicate over unix domain sockets using a simple line-based
+// text protocol. this is the linux equivalent of windows named pipes.
 //
-// commands:
-//   PLAY          - resume playback
-//   PAUSE         - pause playback
-//   STOP          - graceful shutdown
-//   SWITCH <path> - switch to a different video
-//   RELOAD        - reload current content (for scene renderer)
+// protocol commands:
+//   PLAY           - resume playback
+//   PAUSE          - pause playback
+//   STOP           - graceful shutdown
+//   SWITCH <path>  - switch to a different video file
+//   RELOAD         - reload current content (for scene renderer)
 //   CAPTURE <path> - capture a preview frame to the given path
 
 /// start an ipc listener on a unix domain socket.
-/// runs in its own thread, calls the handler for each command received.
-///
-/// on windows (dev only) this is a no-op stub.
+/// runs in a background thread, calls the handler for each command received.
+/// the sidecar binary (cl_vp.rs) calls this to listen for commands
+/// from the main tauri app.
 #[cfg(target_os = "linux")]
-pub fn start_ipc_listener<F>(socket_path: &str, handler: F)
+pub fn start_listener<F>(socket_path: &str, handler: F)
 where
     F: Fn(&str) + Send + 'static,
 {
@@ -25,7 +26,7 @@ where
 
     let socket_path = socket_path.to_string();
 
-    // clean up stale socket
+    // clean up any stale socket file from a previous crash
     let _ = std::fs::remove_file(&socket_path);
 
     let listener = match UnixListener::bind(&socket_path) {
@@ -76,12 +77,38 @@ where
     });
 }
 
-/// dev stub: log that we'd start a listener, but don't actually
-/// bind a unix socket since we're on windows
+/// send a command to a running sidecar over its unix domain socket.
+/// the main tauri app calls this to send STOP, PAUSE, etc.
+#[cfg(target_os = "linux")]
+pub fn send_command(socket_path: &str, command: &str) {
+    use std::io::Write;
+    use std::os::unix::net::UnixStream;
+
+    match UnixStream::connect(socket_path) {
+        Ok(mut stream) => {
+            let msg = format!("{}\n", command);
+            let _ = stream.write_all(msg.as_bytes());
+            let _ = stream.flush();
+        }
+        Err(e) => {
+            println!("[ipc] send to '{}' failed: {}", socket_path, e);
+        }
+    }
+}
+
+// dev stubs for compiling on windows (the code editor runs here)
 #[cfg(not(target_os = "linux"))]
-pub fn start_ipc_listener<F>(socket_path: &str, _handler: F)
+pub fn start_listener<F>(socket_path: &str, _handler: F)
 where
     F: Fn(&str) + Send + 'static,
 {
     println!("[ipc] stub (not linux): would listen on {}", socket_path);
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn send_command(socket_path: &str, command: &str) {
+    println!(
+        "[ipc] stub (not linux): {} -> {}",
+        socket_path, command
+    );
 }

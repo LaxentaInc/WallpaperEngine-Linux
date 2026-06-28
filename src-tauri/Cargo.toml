@@ -4,39 +4,39 @@ version = "0.1.0"
 description = "ColorWall — Linux Desktop Wallpaper Engine"
 authors = ["LaxentaInc"]
 edition = "2021"
-default-run = "colorwall-laxentainc"
+default-run = "colorwall-linux"
 
 # main tauri application
 [[bin]]
-name = "colorwall-laxentainc"
+name = "colorwall-linux"
 path = "src/main.rs"
 
-# sidecar: video wallpaper player (libmpv + vulkan surface, layer-shell / x11)
+# sidecar: video wallpaper player (libmpv + layer-shell / x11)
 [[bin]]
 name = "cl-video-player"
 path = "src/bin/cl_vp.rs"
 
 [lib]
-name = "colorwall_linux"
+name = "colorwall_linux_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# --- tauri core ---
 tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+
+# --- serialization ---
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# --- utilities ---
 lazy_static = "1.4"
 dirs = "5"
-
-# --- sidecar windowing ---
-winit = "0.30"
-layershellev = "0.18.1"
-raw-window-handle = "0.6"
 
 [profile.dev]
 incremental = true

@@ -1,29 +1,28 @@
-// cl-video-player — sidecar binary for video wallpaper playback
+// cl-video-player - sidecar binary entry point
 //
-// this is the linux equivalent of wallpaper-player.exe.
-// it runs as a separate process spawned by the tauri app.
+// this is the standalone process that the tauri app spawns to render
+// video wallpapers. it is intentionally isolated: if it crashes,
+// the main UI keeps running and can restart it.
 //
-// responsibilities:
-// 1. detect display server (wayland layer-shell / x11 ewmh / gnome xwayland)
-// 2. create a background-layer window on the target monitor
-// 3. initialize libmpv with hardware-accelerated decode (va-api / nvdec)
-// 4. render decoded frames to the window surface
-// 5. listen for ipc commands over a unix domain socket
+// this file BUILDS IT ALL TOGETHER:
+// 1. parses CLI args from the tauri app
+// 2. uses the --shell arg to pick the correct compositor implementation
+// 3. creates a desktop-background surface using that implementation
+// 4. attaches mpv to the surface for hardware-accelerated video decode
+// 5. starts the IPC listener to receive commands from the tauri app
 //
-// the binary is intentionally standalone — if it crashes, the main
-// tauri app detects it and can restart it without affecting the ui.
-
-use std::env;
+// the actual implementation code lives in platform/linux/.
+// this file is just the orchestrator that wires everything up.
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
 
     let mut video_path = String::new();
     let mut monitor_id = "primary".to_string();
-    let mut display_server = String::new();
+    let mut shell_type = String::new();
     let mut socket_path = String::new();
 
-    // parse cli args
+    // parse cli args passed by core::engine_video::process
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -39,10 +38,10 @@ fn main() {
                     monitor_id = args[i].clone();
                 }
             }
-            "--display-server" => {
+            "--shell" => {
                 i += 1;
                 if i < args.len() {
-                    display_server = args[i].clone();
+                    shell_type = args[i].clone();
                 }
             }
             "--socket" => {
@@ -59,35 +58,43 @@ fn main() {
     println!("╔══════════════════════════════════════════════════╗");
     println!("║        cl-video-player — colorwall linux         ║");
     println!("╚══════════════════════════════════════════════════╝");
-    println!("[player] video:          {}", video_path);
-    println!("[player] monitor:        {}", monitor_id);
-    println!("[player] display server: {}", display_server);
-    println!("[player] socket:         {}", socket_path);
+    println!("[player] video:   {}", video_path);
+    println!("[player] monitor: {}", monitor_id);
+    println!("[player] shell:   {}", shell_type);
+    println!("[player] socket:  {}", socket_path);
 
     if video_path.is_empty() {
         eprintln!("[player] error: no video path provided (--video <path>)");
         std::process::exit(1);
     }
 
-    // todo: phase 1 implementation
-    // 1. based on display_server, create the background window:
-    //    - "wayland-wlroots" / "wayland-kde" → zwlr_layer_shell_v1
-    //    - "wayland-gnome" / "x11"           → xwayland + ewmh hints
-    //
-    // 2. initialize libmpv with hardware decode:
-    //    mpv_set_option_string(ctx, "hwdec", "auto");
-    //    mpv_set_option_string(ctx, "vo", "gpu-next");
-    //
-    // 3. start the render loop
-    //
-    // 4. listen for ipc commands on the unix domain socket
+    // step 1: create the desktop surface using the correct compositor implementation
+    // the --shell arg was set by core::engine_video::process based on detection results
+    match shell_type.as_str() {
+        "layer-shell" => {
+            println!("[player] using platform/linux/layer_shell/ implementation");
+            // todo: call platform::linux::layer_shell::surface::LayerShellSurface::create()
+        }
+        "x11" => {
+            println!("[player] using platform/linux/x11/ implementation");
+            // todo: call platform::linux::x11::surface::X11Surface::create()
+        }
+        "mutter" => {
+            println!("[player] using platform/linux/mutter/ implementation");
+            // todo: call platform::linux::mutter::surface::MutterSurface::create()
+        }
+        _ => {
+            eprintln!("[player] error: unknown shell type '{}'. expected: layer-shell, x11, mutter", shell_type);
+            std::process::exit(1);
+        }
+    }
 
-    // placeholder: just hang until killed so the engine can track us
-    println!("[player] waiting for implementation... (ctrl+c to exit)");
+    // step 2: initialize mpv on the surface
+    // todo: call platform::linux::video::mpv::initialize()
 
-    // start ipc listener (this part works already)
+    // step 3: start ipc listener for commands from the tauri app
     if !socket_path.is_empty() {
-        colorwall_linux_lib::platform::ipc::start_ipc_listener(&socket_path, |cmd| {
+        colorwall_linux_lib::platform::linux::shared::ipc::start_listener(&socket_path, |cmd| {
             println!("[player] ipc command: {}", cmd);
             if cmd == "STOP" {
                 println!("[player] shutting down");
@@ -96,7 +103,7 @@ fn main() {
         });
     }
 
-    // block main thread
+    // block main thread until killed
     loop {
         std::thread::sleep(std::time::Duration::from_secs(1));
     }

@@ -1,10 +1,8 @@
-// core — shared application logic
+// core - app-level orchestration
 //
-// cross-platform business logic that doesn't depend on
-// windows or linux specifics. things like:
-// - wallpaper state persistence
-// - scene engine management
-// - telemetry / breadcrumbs
-// - discord rpc
+// manages the lifecycle of sidecar processes, wallpaper state
+// persistence, and any cross-cutting concerns that don't belong
+// in a specific platform implementation.
 
 pub mod state;
+pub mod engine_video;

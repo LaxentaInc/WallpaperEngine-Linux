@@ -33,6 +33,11 @@ serde_json = "1"
 lazy_static = "1.4"
 dirs = "5"
 
+# --- sidecar windowing ---
+winit = "0.30"
+layershellev = "0.18.1"
+raw-window-handle = "0.6"
+
 [profile.dev]
 incremental = true
 

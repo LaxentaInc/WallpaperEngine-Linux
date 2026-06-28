@@ -12,10 +12,9 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
-            // commands re-exported from ui/mod.rs for clean access
-            colorwall_linux_lib::ui::cmd_set_video_wallpaper,
-            colorwall_linux_lib::ui::cmd_stop_wallpaper,
-            colorwall_linux_lib::ui::cmd_get_display_info,
+            colorwall_linux_lib::ui::commands::video_ops::cmd_set_video_wallpaper,
+            colorwall_linux_lib::ui::commands::video_ops::cmd_stop_wallpaper,
+            colorwall_linux_lib::ui::commands::system_info::cmd_get_display_info,
         ])
         .setup(|app| {
             println!(

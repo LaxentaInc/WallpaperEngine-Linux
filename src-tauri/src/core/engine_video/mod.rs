@@ -6,4 +6,11 @@
 //
 // mirrors: core/engine_video/ in the windows version
 
-pub mod process;
+pub mod process_state;
+pub mod paths;
+pub mod shutdown;
+pub mod runtime;
+
+// re-export the public API for the rest of the app to use
+pub use runtime::set_video_wallpaper;
+pub use shutdown::{stop_all, stop_on_monitor};

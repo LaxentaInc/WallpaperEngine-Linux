@@ -7,4 +7,5 @@
 // mpv.rs does NOT know or care whether it's running on wayland,
 // x11, or gnome. it just takes a window id and plays.
 
+pub mod config;
 pub mod mpv;

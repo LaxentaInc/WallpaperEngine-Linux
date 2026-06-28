@@ -15,44 +15,43 @@
 // - platform/windows/mpv/ (mpv backend on windows)
 // - platform/windows/wmf/ (windows media foundation backend)
 
-/// configuration for initializing the mpv player.
-/// the sidecar entry point (cl_vp.rs) builds this from CLI args
-/// and passes it to initialize().
-pub struct MpvConfig {
-    /// path to the video file to play
-    pub video_path: String,
-    /// the raw window id to render into (from DesktopSurface::window_id())
-    pub window_id: u64,
-    /// whether to loop the video infinitely (wallpaper mode)
-    pub loop_playback: bool,
-    /// volume level (0-100, typically 0 for wallpapers)
-    pub volume: u32,
-}
+use super::config::MpvConfig;
+use libmpv::Mpv;
 
 /// initialize libmpv and start playing the video.
-///
-/// this function:
-/// 1. creates an mpv context
-/// 2. sets hardware decode to auto (vaapi/nvdec/software fallback)
-/// 3. sets the render target to the given window id
-/// 4. loads the video file and starts playback
-/// 5. blocks until mpv exits or receives a stop command
 pub fn initialize(config: &MpvConfig) -> Result<(), String> {
-    // todo: implement using the mpv crate (libmpv rust bindings)
-    //
-    // pseudocode:
-    // let mpv = mpv::Mpv::new()?;
-    // mpv.set_property("wid", config.window_id)?;
-    // mpv.set_property("hwdec", "auto")?;
-    // mpv.set_property("vo", "gpu-next")?;    // modern vulkan output
-    // mpv.set_property("loop-file", "inf")?;
-    // mpv.set_property("volume", config.volume)?;
-    // mpv.command("loadfile", &[&config.video_path])?;
-    // mpv.event_loop();  // blocks until quit
+    println!("[mpv] initializing libmpv context...");
+    let mpv = Mpv::new().map_err(|e| format!("failed to create mpv context: {}", e))?;
+    // pass the raw window id so mpv renders into our background surface.
+    // if window_id is 0, mpv will spawn its own test window (great for debugging!)
+    if config.window_id != 0 {
+        mpv.set_property("wid", config.window_id as i64)
+            .map_err(|e| format!("failed to set window id: {}", e))?;
+    }
 
-    println!(
-        "[mpv] would initialize with video='{}' window_id={} loop={} volume={}",
-        config.video_path, config.window_id, config.loop_playback, config.volume
-    );
-    Err("mpv initialization not implemented yet".to_string())
+    mpv.set_property("hwdec", "auto").unwrap(); // uses vaapi or nvdec if available
+    mpv.set_property("vo", "gpu").unwrap();
+    mpv.set_property("osc", "no").unwrap();
+    mpv.set_property("window-dragging", "no").unwrap();
+    mpv.set_property("input-default-bindings", "no").unwrap();
+    mpv.set_property("audio", "no").unwrap();
+    mpv.set_property("border", "no").unwrap();
+
+    // apply wallpaper properties (loop, volume)
+    if config.loop_playback {
+        mpv.set_property("loop-file", "inf").unwrap();
+    }
+    mpv.set_property("volume", config.volume as i64).unwrap();
+    println!("[mpv] loading video: {}", config.video_path);
+    mpv.command("loadfile", &[&config.video_path])
+        .map_err(|e| format!("failed to load video: {}", e))?;
+
+    // events to keep the player alive
+    // (in the future, we will handle IPC commands here to pause/resume)
+    let mut events = mpv.create_event_context();
+    loop {
+        if let Some(_event) = events.wait_event(1.0) {
+            // process event if needed
+        }
+    }
 }

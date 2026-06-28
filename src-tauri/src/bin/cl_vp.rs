@@ -89,10 +89,7 @@ fn main() {
         }
     }
 
-    // step 2: initialize mpv on the surface
-    // todo: call platform::linux::runner::mpv::initialize()
-
-    // step 3: start ipc listener for commands from the tauri app
+    // step 2: start ipc listener for commands from the tauri app
     if !socket_path.is_empty() {
         colorwall_linux_lib::platform::linux::shared::ipc::start_listener(&socket_path, |cmd| {
             println!("[player] ipc command: {}", cmd);
@@ -103,8 +100,16 @@ fn main() {
         });
     }
 
-    // block main thread until killed
-    loop {
-        std::thread::sleep(std::time::Duration::from_secs(1));
+    // step 3: initialize mpv on the surface (this blocks!)
+    let config = colorwall_linux_lib::platform::linux::runner::config::MpvConfig {
+        video_path,
+        window_id: 0, // 0 = test mode, spawn floating window
+        loop_playback: true,
+        volume: 0,
+    };
+
+    if let Err(e) = colorwall_linux_lib::platform::linux::runner::mpv::initialize(&config) {
+        eprintln!("[player] mpv error: {}", e);
+        std::process::exit(1);
     }
 }

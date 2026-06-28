@@ -90,7 +90,7 @@ fn main() {
     }
 
     // step 2: initialize mpv on the surface
-    // todo: call platform::linux::video::mpv::initialize()
+    // todo: call platform::linux::runner::mpv::initialize()
 
     // step 3: start ipc listener for commands from the tauri app
     if !socket_path.is_empty() {

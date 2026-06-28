@@ -5,7 +5,7 @@
 // compositor means adding a new sibling folder, nothing else changes.
 
 pub mod shared;
-pub mod video;
+pub mod runner;
 pub mod layer_shell;
 pub mod x11;
 pub mod mutter;

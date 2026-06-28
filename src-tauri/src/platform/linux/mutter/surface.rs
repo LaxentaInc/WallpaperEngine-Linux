@@ -10,6 +10,7 @@
 // - may not work if gnome disables xwayland in future releases
 // - fractional scaling may be inconsistent
 
+// THIS, WILL BE DONE AT THE VERY FUCKING END in all fairs
 use crate::platform::linux::shared::surface_trait::DesktopSurface;
 use crate::platform::linux::shared::types::MonitorInfo;
 

@@ -16,7 +16,7 @@
 // - platform/windows/wmf/ (windows media foundation backend)
 
 use super::config::MpvConfig;
-use libmpv::Mpv;
+use libmpv2::Mpv;
 
 /// initialize libmpv and start playing the video.
 pub fn initialize(config: &MpvConfig) -> Result<(), String> {
@@ -29,15 +29,19 @@ pub fn initialize(config: &MpvConfig) -> Result<(), String> {
             .map_err(|e| format!("failed to set window id: {}", e))?;
     }
 
-    mpv.set_property("hwdec", "auto").unwrap(); // uses vaapi or nvdec if available
+    mpv.set_property("hwdec", "auto-safe").unwrap(); // uses vaapi/nvdec safely
     mpv.set_property("vo", "gpu").unwrap();
+    
+    mpv.set_property("profile", "fast").unwrap();
+    mpv.set_property("vd-lavc-fast", "yes").unwrap();
+    mpv.set_property("vd-lavc-skiploopfilter", "all").unwrap(); // huge CPU save for h264
     mpv.set_property("osc", "no").unwrap();
     mpv.set_property("window-dragging", "no").unwrap();
     mpv.set_property("input-default-bindings", "no").unwrap();
     mpv.set_property("audio", "no").unwrap();
     mpv.set_property("border", "no").unwrap();
 
-    // apply wallpaper properties (loop, volume)
+    // apply wallpaper properties
     if config.loop_playback {
         mpv.set_property("loop-file", "inf").unwrap();
     }
@@ -48,9 +52,8 @@ pub fn initialize(config: &MpvConfig) -> Result<(), String> {
 
     // events to keep the player alive
     // (in the future, we will handle IPC commands here to pause/resume)
-    let mut events = mpv.create_event_context();
     loop {
-        if let Some(_event) = events.wait_event(1.0) {
+        if let Some(_event) = mpv.wait_event(1.0) {
             // process event if needed
         }
     }

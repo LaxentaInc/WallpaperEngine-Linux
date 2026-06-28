@@ -4,68 +4,29 @@ version = "0.1.0"
 description = "ColorWall — Linux Desktop Wallpaper Engine"
 authors = ["LaxentaInc"]
 edition = "2021"
-default-run = "colorwall-linux"
+default-run = "colorwall-laxentainc"
 
 # main tauri application
 [[bin]]
-name = "colorwall-linux"
+name = "colorwall-laxentainc"
 path = "src/main.rs"
 
 # sidecar: video wallpaper player (libmpv + vulkan surface, layer-shell / x11)
 [[bin]]
 name = "cl-video-player"
-path = "src/bin/cl_video_player.rs"
-
-# sidecar: scene compositor (vulkan renderer for .colorwall scenes)
-[[bin]]
-name = "cl-scene-renderer"
-path = "src/bin/cl_scene_renderer.rs"
+path = "src/bin/cl_vp.rs"
 
 [lib]
-name = "colorwall_linux_lib"
+name = "colorwall-linux"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-# --- tauri core ---
-tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
-tauri-plugin-opener = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
-
-# --- serialization ---
+tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-# --- async runtime ---
-tokio = { version = "1", features = ["full"] }
-
-# --- http / scraping (same as windows version) ---
-reqwest = { version = "0.12", features = ["json", "stream", "gzip", "brotli", "deflate"] }
-scraper = "0.22"
-url = "2"
-urlencoding = "2"
-
-# --- system info ---
-sysinfo = "0.32"
-dirs = "5"
-
-# --- utilities ---
-lazy_static = "1.4"
-rand = "0.8"
-regex = "1"
-chrono = { version = "0.4", features = ["serde"] }
-md5 = "0.7"
-futures = "0.3"
-futures-util = "0.3"
-base64 = "0.22"
-image = { version = "0.25", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
-
-# --- linux-specific (only compiled on linux) ---
-[target.'cfg(target_os = "linux")'.dependencies]
-zbus = "5"
 
 [profile.dev]
 incremental = true

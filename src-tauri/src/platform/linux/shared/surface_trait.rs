@@ -19,7 +19,7 @@ pub trait DesktopSurface {
         Self: Sized;
 
     /// returns the raw window handle that mpv will render into.
-    /// this is the critical bridge: mpv's --wid flag or render context
+    /// this is the critical bridge: mpv's render context (wid wont work for us)
     /// needs this platform-specific handle to paint frames.
     fn window_id(&self) -> u64;
 

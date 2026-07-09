@@ -5,10 +5,9 @@
 
 use layershellev::{
     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
-    NewLayerShellSettings, OutputOption,
+    OutputOption,
     calloop::channel,
 };
-use libmpv2::{Mpv, render::{RenderParam, RenderParamApiType, OpenGLInitParams}};
 use std::os::raw::c_void;
 
 use crate::platform::linux::shared::types::MonitorInfo;
@@ -27,17 +26,12 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
 
     // 1. Set up the layershellev state
     let ev: WindowState<()> = WindowState::new("colorwall-linux")
-        .with_single(NewLayerShellSettings {
-            size: None,
-            layer: Layer::Background,
-            anchor: Anchor::Bottom | Anchor::Left | Anchor::Right | Anchor::Top,
-            exclusive_zone: Some(-1),
-            margin: Some((0, 0, 0, 0)),
-            keyboard_interactivity: KeyboardInteractivity::None,
-            output_option: OutputOption::OutputName(monitor.name.clone()),
-            events_transparent: true,
-            namespace: Some("wallpaper".to_string()),
-        })
+        .with_layer(Layer::Background)
+        .with_anchor(Anchor::Bottom | Anchor::Left | Anchor::Right | Anchor::Top)
+        .with_exclusive_zone(-1)
+        .with_margin((0, 0, 0, 0))
+        .with_keyboard_interacivity(KeyboardInteractivity::None)
+        .with_output_option(OutputOption::OutputName(monitor.name.clone()))
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 
@@ -49,7 +43,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
         let ipc_sender = event_sender.clone();
         std::thread::spawn(move || {
             ipc::start_listener(&socket_path, move |cmd| {
-                let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd));
+                let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd.to_string()));
             });
         });
     }

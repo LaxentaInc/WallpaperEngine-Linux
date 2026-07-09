@@ -1,0 +1,85 @@
+name: Build
+
+on:
+    push:
+        branches:
+            - master
+        tags:
+            - v*
+    pull_request:
+        branches:
+            - master
+concurrency:
+    group: ${{ github.ref }}
+    cancel-in-progress: true
+jobs:
+    build:
+        name: Build Binary
+        runs-on: ubuntu-latest
+        container:
+          image: archlinux:latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                components: clippy rustfmt
+            - name: Install Deps
+              run: pacman -Syu --noconfirm base-devel libxkbcommon pango wayland
+            - name: Run fmt check
+              run: cargo fmt --all -- --check
+            - name: Run clippy check
+              run: cargo clippy -- -D warnings
+            - name: Run tests
+              run: cargo test --verbose
+
+    crate-release:
+        permissions:
+            contents: write
+            id-token: write
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs:
+            - build
+        runs-on: ubuntu-latest
+        container:
+          image: archlinux:latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                components: clippy rustfmt
+            - name: Install Deps
+              run: pacman -Syu --noconfirm base-devel libxkbcommon pango wayland
+            - name: Obtain crates.io token
+              uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+              id: auth
+            - name: Publish to crate
+              run: |
+                cargo publish --workspace
+              env:
+                CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+    github-release:
+        permissions:
+            contents: write
+            id-token: write
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs:
+            - crate-release
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                persist-credentials: false
+            - uses: taiki-e/create-gh-release-action@eba8ea96c86cca8a37f1b56e94b4d13301fba651 # v1.11.0
+              with:
+                branch: master
+                changelog: CHANGELOG.md
+                draft: true
+                token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Publish github release
+              run: |
+                if [[ $(echo "${GTIHUB_REF#refs/tags/v}" | grep '-' > /dev/null) ]]; then
+                  gh release edit "${GITHUB_REF#refs/tags/}" --prerelease
+                fi
+                gh release edit "${GITHUB_REF#refs/tags/}" --draft=false
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

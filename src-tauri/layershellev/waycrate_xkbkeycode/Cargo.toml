@@ -1,0 +1,20 @@
+[package]
+name = "waycrate_xkbkeycode"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+readme = "README.md"
+description = "something about xkbcommon, used in iced-layershell"
+
+[dependencies]
+xkbcommon-dl.workspace = true
+memmap2.workspace = true
+wayland-client.workspace = true
+wayland-backend.workspace = true
+log.workspace = true
+calloop.workspace = true
+winit-common.workspace = true
+winit-core.workspace = true

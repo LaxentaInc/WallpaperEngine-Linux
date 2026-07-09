@@ -1,0 +1,31 @@
+[package]
+name = "application-launcher"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+keywords.workspace = true
+readme.workspace = true
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iced = { workspace = true, features = [
+  "tokio",
+  "debug",
+  "advanced",
+  "image",
+  "svg",
+] }
+iced_runtime.workspace = true
+iced_layershell.workspace = true
+regex = "1.11.1"
+xdg = "3.0.0"
+tracing = "0.1.40"
+freedesktop-desktop-entry = "0.8.1"
+zbus = "5.16.0"
+anyhow = "1.0.102"
+serde = { version = "1.0", features = ["derive"] }

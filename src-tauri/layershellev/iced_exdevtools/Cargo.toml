@@ -1,0 +1,21 @@
+[package]
+name = "iced_exdevtools"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+description = "A macro lib for exshelleventloop"
+
+[features]
+time-travel = ["iced_program/time-travel"]
+
+[dependencies]
+iced_debug.workspace = true
+iced_program.workspace = true
+iced_widget.workspace = true
+iced_devtools.workspace = true
+winit-core.workspace = true
+
+log.workspace = true

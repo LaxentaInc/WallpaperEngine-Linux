@@ -38,6 +38,13 @@ serde_json = "1"
 lazy_static = "1.4"
 dirs = "5"
 
+# --- wayland + layer shell ---
+layershellev = { path = "layershellev/layershellev" }
+wayland-client = "0.31"
+wayland-egl = "0.31"
+khronos-egl = "6.0"
+gl = "0.14"
+
 [profile.dev]
 incremental = true
 

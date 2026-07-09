@@ -1,0 +1,57 @@
+#![doc = include_str!("../README.md")]
+pub mod actions;
+pub mod build_pattern;
+mod clipboard;
+mod conversion;
+mod error;
+mod event;
+mod multi_window;
+mod proxy;
+mod user_interface;
+
+pub mod settings;
+
+pub mod reexport {
+    pub use layershellev::NewInputPanelSettings;
+    pub use layershellev::NewLayerShellSettings;
+    pub use layershellev::OutputOption;
+    pub use layershellev::PopupPlacement;
+    pub use layershellev::WithConnection;
+    pub use layershellev::reexport::Anchor;
+    pub use layershellev::reexport::KeyboardInteractivity;
+    pub use layershellev::reexport::Layer;
+    pub use layershellev::reexport::wayland_client::{WlRegion, wl_keyboard};
+    pub use layershellev::reexport::xdg_positioner::{
+        Anchor as PopupAnchor, ConstraintAdjustment as PopupConstraintAdjustment,
+        Gravity as PopupGravity,
+    };
+    pub mod core {
+        pub use iced_core::*;
+    }
+    pub use iced_core::window::Id as IcedId;
+    pub use iced_runtime::Task;
+}
+
+mod ime_preedit;
+
+pub use iced_layershell_macros::to_layer_message;
+
+pub use error::Error;
+
+/// Opt-out for clipboard initialization. Call this before starting the
+/// runtime when your app has no text input and doesn't need paste/copy —
+/// this skips spawning the always-on smithay-clipboard worker thread.
+pub fn disable_clipboard() {
+    clipboard::set_disabled();
+}
+
+pub type Result = std::result::Result<(), error::Error>;
+use iced_core::theme::Style as Appearance;
+
+use iced_core::theme::Base as DefaultStyle;
+
+// layershell application
+pub use build_pattern::application;
+pub use build_pattern::daemon;
+
+pub use settings::Settings;

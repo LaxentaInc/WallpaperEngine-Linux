@@ -1,41 +1,19 @@
-laxenta@laxenta-virtualbox:~/wallpaperengine-local$ pnpm tauri dev
-$ tauri dev
-     Running BeforeDevCommand (`pnpm dev`)
-        Warn Waiting for your frontend dev server to start on http://localhost:1420/...
-$ vite
-
-  VITE v7.3.5  ready in 1662 ms
-
-  ➜  Local:   http://localhost:1420/
+        Info File src-tauri/src/platform/linux/runner/mpv.rs changed. Rebuilding application...
      Running DevCommand (`cargo  run --no-default-features --color always --`)
-        Info Watching /home/laxenta/wallpaperengine-local/src-tauri for changes...
    Compiling colorwall-linux v0.1.0 (/home/laxenta/wallpaperengine-local/src-tauri)
-error[E0599]: no method named `with_output_option` found for struct `WindowState<T>` in the current scope
-  --> src/platform/linux/layer_shell/surface.rs:34:10
-   |
-28 |       let ev: WindowState<()> = WindowState::new("colorwall-linux")
-   |  _______________________________-
-29 | |         .with_layer(Layer::Background)
-30 | |         .with_anchor(Anchor::Bottom | Anchor::Left | Anchor::Right | Anc...
-31 | |         .with_exclusive_zone(-1)
-32 | |         .with_margin((0, 0, 0, 0))
-33 | |         .with_keyboard_interacivity(KeyboardInteractivity::None)
-34 | |         .with_output_option(OutputOption::OutputName(monitor.name.clone()))
-   | |         -^^^^^^^^^^^^^^^^^^ method not found in `WindowState<_>`
-   | |_________|
-   |
+error[E0308]: mismatched types
+   --> src/platform/linux/layer_shell/surface.rs:102:33
+    |
+101 | ... let surface = wayland_egl::WlEglSurface::new(
+    |                   ------------------------------ arguments to this function are incorrect
+102 | ...     unit.get_wlsurface(),
+    |         ^^^^^^^^^^^^^^^^^^^^ expected `ObjectId`, found `&WlSurface`
+    |
+note: associated function defined here
+   --> /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wayland-egl-0.31.0/src/lib.rs:46:12
+    |
+ 46 |     pub fn new(surface: ObjectId, width: i32, height: i3...
+    |            ^^^
 
-error[E0502]: cannot borrow `*mpv_ref` as mutable because it is also borrowed as immutable
-  --> src/platform/linux/runner/mpv.rs:78:18
-   |
-58 |         let mut render_context = mpv_ref
-   |                                  ------- immutable borrow occurs here
-...
-78 |             mpv: mpv_ref,
-   |                  ^^^^^^^ mutable borrow occurs here
-79 |             render_context,
-   |             -------------- this usage requires that `*mpv_ref` is borrowed for `'static`
-
-Some errors have detailed explanations: E0502, E0599.
-For more information about an error, try `rustc --explain E0502`.
-error: could not compile `colorwall-linux` (lib) due to 2 previous errors
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `colorwall-linux` (lib) due to 1 previous error

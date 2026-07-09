@@ -20,7 +20,7 @@ fn mpv_get_proc_address(ctx: &*const c_void, name: &str) -> *mut c_void {
 }
 
 pub struct MpvPlayer {
-    pub mpv: &'static mut Mpv,
+    pub mpv: &'static Mpv,
     pub render_context: libmpv2::render::RenderContext<'static>,
 }
 
@@ -52,7 +52,7 @@ impl MpvPlayer {
             Ok(())
         }).map_err(|e| format!("failed to create mpv context: {}", e))?;
 
-        let mpv_ref = Box::leak(Box::new(mpv));
+        let mpv_ref: &'static Mpv = Box::leak(Box::new(mpv));
         let ctx_ptr = egl_context as *const _ as *const c_void;
         
         let mut render_context = mpv_ref

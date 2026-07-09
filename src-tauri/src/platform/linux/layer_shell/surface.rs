@@ -23,7 +23,7 @@ pub enum PlayerMessage {
 pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String) -> Result<(), String> {
     println!("[layer_shell] creating background surface on monitor '{}'", monitor.name);
 
-    // 1. set up the layershellev state
+    // set up the layershellev state
     // with_xdg_output_name targets the specific monitor by its xdg output name
     // (e.g. "HDMI-A-1", "eDP-1") which MonitorInfo.name already provides.
     // with_events_transparent makes the surface ignore all pointer/keyboard input,
@@ -39,7 +39,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 
-    // 2. Set up the IPC / MPV communication channel
+    // Set up the IPC / MPV communication channel
     let (event_sender, event_receiver) = channel::channel::<PlayerMessage>();
 
     // Start IPC thread if socket path provided
@@ -61,7 +61,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
     let event_sender_clone = event_sender.clone();
     let config_clone = config.clone();
 
-    // 3. Run the event loop
+    // Run the event loop
     ev.running_with_proxy(event_receiver, move |event, window_state, _index| {
         match event {
             LayerShellEvent::InitRequest => {
@@ -95,21 +95,24 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                         current_size = (width, height);
                         
                         if let Some(egl) = egl_context.as_mut() {
-                            // 1. Create wayland-egl wrapper
+                            // create the wayland-egl wrapper around the wl_surface.
+                            // WlEglSurface::new calls wl_egl_window_create under the hood,
+                            // which gives EGL a native window handle to render into.
+                            use wayland_client::Proxy;
                             let surface = wayland_egl::WlEglSurface::new(
-                                unit.get_wlsurface().clone(),
+                                unit.get_wlsurface().id(),
                                 width as i32,
                                 height as i32,
                             ).expect("Failed to create WlEglSurface");
                             
-                            // 2. Bind to EGL
+                            // Bind to EGL
                             egl.create_window_surface(surface.ptr() as *mut c_void)
                                 .expect("Failed to create EGL window surface");
                             
                             // Keep it alive
                             wl_egl_surface = Some(surface);
                             
-                            // 3. Init MPV now that EGL is ready
+                            // Init MPV now that EGL is ready
                             if mpv_player.is_none() {
                                 mpv_player = Some(crate::platform::linux::runner::mpv::MpvPlayer::new(
                                     &config_clone,

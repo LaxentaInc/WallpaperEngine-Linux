@@ -214,6 +214,8 @@ use wayland_protocols::xdg::decoration::zv1::client::{
 };
 
 pub use calloop;
+pub use wayland_client;
+pub use wayland_backend;
 use calloop::{
     Error as CallLoopError, EventLoop, LoopHandle, RegistrationToken,
     channel::{self, Channel},
@@ -1562,6 +1564,13 @@ impl<T> WindowState<T> {
 
     pub fn get_display(&self) -> WlDisplay {
         self.display.clone().expect("WlDisplay not initialized yet")
+    }
+
+    /// exposes the underlying wayland connection. needed to extract the
+    /// raw c-level wl_display* pointer via connection.backend().display_ptr(),
+    /// which eglGetPlatformDisplay requires for egl initialization.
+    pub fn get_connection(&self) -> &Connection {
+        self.connection.as_ref().expect("Connection not initialized yet")
     }
 
     /// it return the iter of units. you can do loop with it

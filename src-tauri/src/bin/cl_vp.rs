@@ -68,48 +68,33 @@ fn main() {
         std::process::exit(1);
     }
 
-    // step 1: create the desktop surface using the correct compositor implementation
-    // the --shell arg was set by core::engine_video::process based on detection results
+    // step 3: initialize player and run event loop
+    let config = colorwall_linux_lib::platform::linux::runner::config::MpvConfig {
+        video_path,
+        window_id: 0,
+        loop_playback: true,
+        volume: 0,
+    };
+
     match shell_type.as_str() {
         "layer-shell" => {
             println!("[player] using platform/linux/layer_shell/ implementation");
-            // todo: call platform::linux::layer_shell::surface::LayerShellSurface::create()
+            if let Err(e) = colorwall_linux_lib::platform::linux::layer_shell::surface::run_player(&monitor_info, &config, socket_path) {
+                eprintln!("[player] layer-shell error: {}", e);
+                std::process::exit(1);
+            }
         }
         "x11" => {
-            println!("[player] using platform/linux/x11/ implementation");
-            // todo: call platform::linux::x11::surface::X11Surface::create()
+            println!("[player] using platform/linux/x11/ implementation (TODO)");
+            // todo: call platform::linux::x11::surface::run_player()
         }
         "mutter" => {
-            println!("[player] using platform/linux/mutter/ implementation");
-            // todo: call platform::linux::mutter::surface::MutterSurface::create()
+            println!("[player] using platform/linux/mutter/ implementation (TODO)");
+            // todo: call platform::linux::mutter::surface::run_player()
         }
         _ => {
             eprintln!("[player] error: unknown shell type '{}'. expected: layer-shell, x11, mutter", shell_type);
             std::process::exit(1);
         }
-    }
-
-    // step 2: start ipc listener for commands from the tauri app
-    if !socket_path.is_empty() {
-        colorwall_linux_lib::platform::linux::shared::ipc::start_listener(&socket_path, |cmd| {
-            println!("[player] ipc command: {}", cmd);
-            if cmd == "STOP" {
-                println!("[player] shutting down");
-                std::process::exit(0);
-            }
-        });
-    }
-
-    // step 3: initialize mpv on the surface (this blocks!)
-    let config = colorwall_linux_lib::platform::linux::runner::config::MpvConfig {
-        video_path,
-        window_id: 0, // 0 = test mode, spawn floating window
-        loop_playback: true,
-        volume: 0,
-    };
-
-    if let Err(e) = colorwall_linux_lib::platform::linux::runner::mpv::initialize(&config) {
-        eprintln!("[player] mpv error: {}", e);
-        std::process::exit(1);
     }
 }

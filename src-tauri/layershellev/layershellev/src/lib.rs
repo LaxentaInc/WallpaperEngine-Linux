@@ -160,8 +160,8 @@ use sctk::{
     seat::SeatState,
 };
 use wayland_cursor::{CursorImageBuffer, CursorTheme};
-use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1::KeyboardInteractivity;
-use wayland_protocols_wlr::layer_shell::v1::client::{
+pub use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1::KeyboardInteractivity;
+pub use wayland_protocols_wlr::layer_shell::v1::client::{
     zwlr_layer_shell_v1::{Layer, ZwlrLayerShellV1},
     zwlr_layer_surface_v1::{self, Anchor, ZwlrLayerSurfaceV1},
 };

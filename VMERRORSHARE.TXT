@@ -1,13 +1,352 @@
-ll
-╔══════════════════════════════════════════════════╗
-║        cl-video-player — colorwall linux         ║
-╚══════════════════════════════════════════════════╝
-[player] video:   /home/laxenta/wallpaperengine-local/BlueArchive.mp4
-[player] monitor: primary
-[player] shell:   layer-shell
-[player] socket:  
-[player] using platform/linux/layer_shell/ implementation
-[mpv] initializing libmpv context...
-[mpv] loading video: /home/laxenta/wallpaperengine-local/BlueArchive.mp4
-Cannot load libcuda.so.1
-Failed to open VDPAU backend libvdpau_nvidia.so: cannot open shared object file: No such file or directory
+laxenta@laxenta-virtualbox:~/wallpaperengine-local$ pnpm tauri dev
+$ tauri dev
+     Running BeforeDevCommand (`pnpm dev`)
+        Warn Waiting for your frontend dev server to start on http://localhost:1420/...
+$ vite
+        Warn Waiting for your frontend dev server to start on http://localhost:1420/...
+
+  VITE v7.3.5  ready in 2901 ms
+
+  ➜  Local:   http://localhost:1420/
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching /home/laxenta/wallpaperengine-local/src-tauri for changes...
+   Compiling khronos-egl v6.0.0
+   Compiling layershellev v0.18.1 (/home/laxenta/wallpaperengine-local/src-tauri/layershellev/layershellev)
+   Compiling colorwall-linux v0.1.0 (/home/laxenta/wallpaperengine-local/src-tauri)
+error[E0106]: missing lifetime specifier
+  --> src/platform/linux/runner/mpv.rs:24:42
+   |
+24 |     pub render_context: libmpv2::render::RenderContext,
+   |                                          ^^^^^^^^^^^^^ expected named lifetime parameter
+   |
+help: consider introducing a named lifetime parameter
+   |
+22 ~ pub struct MpvPlayer<'a> {
+23 |     pub mpv: Mpv,
+24 ~     pub render_context: libmpv2::render::RenderContext<'a>,
+   |
+
+error[E0422]: cannot find struct, variant or union type `RenderOpenglFbo` in module `libmpv2::render`
+  --> src/platform/linux/runner/mpv.rs:84:36
+   |
+84 |         let fbo = libmpv2::render::RenderOpenglFbo {
+   |                                    ^^^^^^^^^^^^^^^ not found in `libmpv2::render`
+
+error[E0603]: struct `Anchor` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:5
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |     ^^^^^^ private struct
+    |
+note: the struct `Anchor` is defined here
+   --> layershellev/layershellev/src/lib.rs:166:35
+    |
+166 |     zwlr_layer_surface_v1::{self, Anchor, ZwlrLayerSurfaceV1},
+    |                                   ^^^^^^
+help: import `Anchor` directly
+    |
+  7 |     wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_surface_v1::Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
+    |     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0603]: enum `KeyboardInteractivity` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:13
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |             ^^^^^^^^^^^^^^^^^^^^^ private enum
+    |
+note: the enum `KeyboardInteractivity` is defined here
+   --> layershellev/layershellev/src/lib.rs:163:5
+    |
+163 | use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1::KeyboardInteractivity;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wayland-protocols-wlr-0.3.12/src/protocol_macro.rs:28:17
+    |
+ 28 |                 wayland_scanner::generate_client_code!($path);
+    |                 --------------------------------------------- cannot be constructed because it is `#[non_exhaustive]`
+help: import `KeyboardInteractivity` directly
+    |
+  7 |     Anchor, wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_surface_v1::KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
+    |             ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0603]: enum `Layer` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:36
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |                                    ^^^^^ private enum
+    |
+note: the enum `Layer` is defined here
+   --> layershellev/layershellev/src/lib.rs:165:27
+    |
+165 |     zwlr_layer_shell_v1::{Layer, ZwlrLayerShellV1},
+    |                           ^^^^^
+    |
+   ::: /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wayland-protocols-wlr-0.3.12/src/protocol_macro.rs:28:17
+    |
+ 28 |                 wayland_scanner::generate_client_code!($path);
+    |                 --------------------------------------------- cannot be constructed because it is `#[non_exhaustive]`
+help: import `Layer` directly
+    |
+  7 |     Anchor, KeyboardInteractivity, wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_shell_v1::Layer, LayerShellEvent, ReturnData, WindowState,
+    |                                    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+warning: unused imports: `Mpv`, `OpenGLInitParams`, `RenderParamApiType`, and `RenderParam`
+  --> src/platform/linux/layer_shell/surface.rs:11:15
+   |
+11 | ...2::{Mpv, render::{RenderParam, RenderParamApiType, OpenGLInitParams}};
+   |        ^^^           ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0599]: no variant, associated function, or constant named `OpenglFbo` found for enum `RenderParam<GLContext>` in the current scope
+  --> src/platform/linux/runner/mpv.rs:92:43
+   |
+92 |             libmpv2::render::RenderParam::OpenglFbo(fbo),
+   |                                           ^^^^^^^^^ variant, associated function, or constant not found in `RenderParam<_>`
+
+error[E0061]: this method takes 4 arguments but 1 argument was supplied
+   --> src/platform/linux/runner/mpv.rs:96:29
+    |
+ 96 |         self.render_context.render(params)
+    |                             ^^^^^^-------- three arguments of type `i32`, `i32`, and `bool` are missing
+    |
+note: method defined here
+   --> /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libmpv2-6.0.0/src/mpv/render.rs:333:12
+    |
+333 |     pub fn render<GLContext: 'static>(
+    |            ^^^^^^
+help: provide the arguments
+    |
+ 96 |         self.render_context.render(params, /* i32 */, /* i32 */, /* bool */)
+    |                                          ++++++++++++++++++++++++++++++++++
+
+error[E0599]: no method named `with_single` found for struct `WindowState<T>` in the current scope
+  --> src/platform/linux/layer_shell/surface.rs:30:10
+   |
+29 |       let ev: WindowState<()> = WindowState::new("colorwall-linux")
+   |  _______________________________-
+30 | |         .with_single(NewLayerShellSettings {
+   | |_________-^^^^^^^^^^^
+   |
+help: there is a method `with_size` with a similar name
+   |
+30 -         .with_single(NewLayerShellSettings {
+30 +         .with_size(NewLayerShellSettings {
+   |
+
+error[E0308]: mismatched types
+  --> src/platform/linux/layer_shell/surface.rs:52:67
+   |
+52 |                 let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd));
+   |                                         ------------------------- ^^^ expected `String`, found `&str`
+   |                                         |
+   |                                         arguments to this enum variant are incorrect
+   |
+note: tuple variant defined here
+  --> src/platform/linux/layer_shell/surface.rs:22:5
+   |
+22 |     IpcCommand(String),
+   |     ^^^^^^^^^^
+help: try using a conversion method
+   |
+52 |                 let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd.to_string()));
+   |                                                                      ++++++++++++
+
+error[E0133]: call to unsafe function `Instance::<Dynamic<libloading::safe::Library, khronos_egl::EGL1_4>>::load_required` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:21:19
+   |
+21 |         let egl = egl::DynamicInstance::<egl::EGL1_4>::load_required()
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `khronos_egl::egl1_0::<impl Instance<T>>::get_display` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:25:23
+   |
+25 |         let display = egl.get_display(wl_display_ptr)
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `khronos_egl::egl1_0::<impl Instance<T>>::create_window_surface` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:74:23
+   |
+74 | ... = self.egl.create_window_surface(self.display, self.config, wl_egl_window_ptr, None)
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+Some errors have detailed explanations: E0061, E0106, E0133, E0308, E0422, E0599, E0603.
+For more information about an error, try `rustc --explain E0061`.
+warning: `colorwall-linux` (lib) generated 1 warning
+error: could not compile `colorwall-linux` (lib) due to 12 previous errors; 1 warning emitted
+        Info File src-tauri/src/platform/linux/layer_shell/surface.rs changed. Rebuilding application...
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+   Compiling colorwall-linux v0.1.0 (/home/laxenta/wallpaperengine-local/src-tauri)
+error[E0106]: missing lifetime specifier
+  --> src/platform/linux/runner/mpv.rs:24:42
+   |
+24 |     pub render_context: libmpv2::render::RenderContext,
+   |                                          ^^^^^^^^^^^^^ expected named lifetime parameter
+   |
+help: consider introducing a named lifetime parameter
+   |
+22 ~ pub struct MpvPlayer<'a> {
+23 |     pub mpv: Mpv,
+24 ~     pub render_context: libmpv2::render::RenderContext<'a>,
+   |
+
+error[E0422]: cannot find struct, variant or union type `RenderOpenglFbo` in module `libmpv2::render`
+  --> src/platform/linux/runner/mpv.rs:84:36
+   |
+84 |         let fbo = libmpv2::render::RenderOpenglFbo {
+   |                                    ^^^^^^^^^^^^^^^ not found in `libmpv2::render`
+
+error[E0603]: struct `Anchor` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:5
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |     ^^^^^^ private struct
+    |
+note: the struct `Anchor` is defined here
+   --> layershellev/layershellev/src/lib.rs:166:35
+    |
+166 |     zwlr_layer_surface_v1::{self, Anchor, ZwlrLayerSurfaceV1},
+    |                                   ^^^^^^
+help: import `Anchor` directly
+    |
+  7 |     wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_surface_v1::Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
+    |     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0603]: enum `KeyboardInteractivity` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:13
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |             ^^^^^^^^^^^^^^^^^^^^^ private enum
+    |
+note: the enum `KeyboardInteractivity` is defined here
+   --> layershellev/layershellev/src/lib.rs:163:5
+    |
+163 | use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1::KeyboardInteractivity;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wayland-protocols-wlr-0.3.12/src/protocol_macro.rs:28:17
+    |
+ 28 |                 wayland_scanner::generate_client_code!($path);
+    |                 --------------------------------------------- cannot be constructed because it is `#[non_exhaustive]`
+help: import `KeyboardInteractivity` directly
+    |
+  7 |     Anchor, wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_surface_v1::KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
+    |             ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0603]: enum `Layer` is private
+   --> src/platform/linux/layer_shell/surface.rs:7:36
+    |
+  7 |     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, Wi...
+    |                                    ^^^^^ private enum
+    |
+note: the enum `Layer` is defined here
+   --> layershellev/layershellev/src/lib.rs:165:27
+    |
+165 |     zwlr_layer_shell_v1::{Layer, ZwlrLayerShellV1},
+    |                           ^^^^^
+    |
+   ::: /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wayland-protocols-wlr-0.3.12/src/protocol_macro.rs:28:17
+    |
+ 28 |                 wayland_scanner::generate_client_code!($path);
+    |                 --------------------------------------------- cannot be constructed because it is `#[non_exhaustive]`
+help: import `Layer` directly
+    |
+  7 |     Anchor, KeyboardInteractivity, wayland_protocols_wlr::layer_shell::v1::generated::client::zwlr_layer_shell_v1::Layer, LayerShellEvent, ReturnData, WindowState,
+    |                                    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+warning: unused imports: `Mpv`, `OpenGLInitParams`, `RenderParamApiType`, and `RenderParam`
+  --> src/platform/linux/layer_shell/surface.rs:11:15
+   |
+11 | ...2::{Mpv, render::{RenderParam, RenderParamApiType, OpenGLInitParams}};
+   |        ^^^           ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0599]: no variant, associated function, or constant named `OpenglFbo` found for enum `RenderParam<GLContext>` in the current scope
+  --> src/platform/linux/runner/mpv.rs:92:43
+   |
+92 |             libmpv2::render::RenderParam::OpenglFbo(fbo),
+   |                                           ^^^^^^^^^ variant, associated function, or constant not found in `RenderParam<_>`
+
+error[E0061]: this method takes 4 arguments but 1 argument was supplied
+   --> src/platform/linux/runner/mpv.rs:96:29
+    |
+ 96 |         self.render_context.render(params)
+    |                             ^^^^^^-------- three arguments of type `i32`, `i32`, and `bool` are missing
+    |
+note: method defined here
+   --> /home/laxenta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libmpv2-6.0.0/src/mpv/render.rs:333:12
+    |
+333 |     pub fn render<GLContext: 'static>(
+    |            ^^^^^^
+help: provide the arguments
+    |
+ 96 |         self.render_context.render(params, /* i32 */, /* i32 */, /* bool */)
+    |                                          ++++++++++++++++++++++++++++++++++
+
+error[E0599]: no method named `with_single` found for struct `WindowState<T>` in the current scope
+  --> src/platform/linux/layer_shell/surface.rs:30:10
+   |
+29 |       let ev: WindowState<()> = WindowState::new("colorwall-linux")
+   |  _______________________________-
+30 | |         .with_single(NewLayerShellSettings {
+   | |_________-^^^^^^^^^^^
+   |
+help: there is a method `with_size` with a similar name
+   |
+30 -         .with_single(NewLayerShellSettings {
+30 +         .with_size(NewLayerShellSettings {
+   |
+
+error[E0308]: mismatched types
+  --> src/platform/linux/layer_shell/surface.rs:52:67
+   |
+52 |                 let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd));
+   |                                         ------------------------- ^^^ expected `String`, found `&str`
+   |                                         |
+   |                                         arguments to this enum variant are incorrect
+   |
+note: tuple variant defined here
+  --> src/platform/linux/layer_shell/surface.rs:22:5
+   |
+22 |     IpcCommand(String),
+   |     ^^^^^^^^^^
+help: try using a conversion method
+   |
+52 |                 let _ = ipc_sender.send(PlayerMessage::IpcCommand(cmd.to_string()));
+   |                                                                      ++++++++++++
+
+error[E0133]: call to unsafe function `Instance::<Dynamic<libloading::safe::Library, khronos_egl::EGL1_4>>::load_required` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:21:19
+   |
+21 |         let egl = egl::DynamicInstance::<egl::EGL1_4>::load_required()
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `khronos_egl::egl1_0::<impl Instance<T>>::get_display` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:25:23
+   |
+25 |         let display = egl.get_display(wl_display_ptr)
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `khronos_egl::egl1_0::<impl Instance<T>>::create_window_surface` is unsafe and requires unsafe function or block
+  --> src/platform/linux/layer_shell/egl.rs:74:23
+   |
+74 | ... = self.egl.create_window_surface(self.display, self.config, wl_egl_window_ptr, None)
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+Some errors have detailed explanations: E0061, E0106, E0133, E0308, E0422, E0599, E0603.
+For more information about an error, try `rustc --explain E0061`.
+warning: `colorwall-linux` (lib) generated 1 warning
+error: could not compile `colorwall-linux` (lib) due to 12 previous errors; 1 warning emitted

@@ -13,3 +13,4 @@
 
 pub mod surface;
 pub mod monitors;
+pub mod egl;

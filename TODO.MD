@@ -15,3 +15,10 @@ Step 1: Initialize the EGL Display and SurfaceYou cannot draw to a raw Wayland s
 
 Params for LayerShellSurface::create()
 surface: The underlying, unmapped base Wayland surface.output: The specific monitor (wl_output) where the layer will display (or NULL/None for the compositor default).layer: The absolute Z-depth index of the stack.namespace: A descriptive string identifier for the compositor to apply specific rules (e.g., "panel", "wallpaper").   
+
+KEEPING TRACK in case i forget;
+pub use wayland_client; pub use wayland_backend; (line 217-218)	Our code needs to use WlSurface, WlDisplay, Connection etc. If we add wayland-client as a separate dependency in our Cargo.toml, Cargo might resolve a different minor version (e.g. 0.31.8 vs layershellev's 0.31.7). Same crate, different versions = incompatible types. By re-exporting from layershellev, we guarantee we're using the exact same copy.
+
+get_connection() on WindowState (line 1568)	EGL needs the raw C pointer wl_display* to call eglGetPlatformDisplay(). The WlDisplay proxy is a Rust wrapper - it's NOT the C pointer. The actual C pointer lives inside Connection's backend (connection.backend().display_ptr()).
+
+get_display(), get_wl_surface() on WindowStateUnit (line 555-560)	These expose the Wayland proxy objects. We need wl_surface to create a wl_egl_window which becomes our EGL render target.

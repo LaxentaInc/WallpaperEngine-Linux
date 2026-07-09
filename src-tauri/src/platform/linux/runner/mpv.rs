@@ -87,7 +87,8 @@ impl MpvPlayer {
             
         egl_context.swap_buffers()?;
         
-        self.render_context.update();
+        self.render_context.update()
+            .map_err(|e| format!("mpv context update error: {:?}", e))?;
         Ok(())
     }
 }

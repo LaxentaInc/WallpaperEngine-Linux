@@ -60,3 +60,12 @@ This document serves as a historical log of every technical hurdle, compilation 
 **Error:** `expected wayland_backend::sys::client::ObjectId, found ObjectId. note: there are multiple different versions of crate wayland_backend in the dependency graph`
 **Root Cause:** We fixed the previous error by calling `.id()`, but `Cargo` ended up pulling two completely different major versions of `wayland-backend` (`0.2.0` and `0.3.15`). `layershellev` uses `wayland-client 0.31` which pairs with `wayland-backend 0.3`. However, we explicitly depended on `wayland-egl = "0.31"`, and it turns out the `0.31` version of `wayland-egl` relies on the older `wayland-backend 0.2.0`.
 **Fix:** Bumped `wayland-egl` from `"0.31"` to `"0.32"` in `Cargo.toml`. The `0.32` version correctly aligns with `wayland-backend 0.3.x`, fully syncing our dependency tree and unifying the `ObjectId` types.
+
+## 9. Unused wl_egl_surface warning
+**Err:** `--> src/platform/linux/runner/mpv.rs:90:9`
+   |
+90 |         `self.render_context.update();`
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+**Cause:** Assigned `wl_egl_surface` = Some(surface) but never read from it again. This is intentional because we only need to store it to prevent Rust from dropping it and destroying the EGL window. 
+**Effective Change**: `let mut _wl_egl_surface`. (i.e. prefixing with underscore erm -> "_")

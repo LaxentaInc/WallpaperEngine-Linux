@@ -55,7 +55,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
     // Mutable state for the event loop
     let mut egl_context: Option<EglContext> = None;
     let mut mpv_player: Option<crate::platform::linux::runner::mpv::MpvPlayer> = None;
-    let mut wl_egl_surface: Option<wayland_egl::WlEglSurface> = None;
+    let mut _wl_egl_surface: Option<wayland_egl::WlEglSurface> = None;
     let mut current_size = (0, 0);
 
     let event_sender_clone = event_sender.clone();
@@ -110,7 +110,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                                 .expect("Failed to create EGL window surface");
                             
                             // Keep it alive
-                            wl_egl_surface = Some(surface);
+                            _wl_egl_surface = Some(surface);
                             
                             // Init MPV now that EGL is ready
                             if mpv_player.is_none() {

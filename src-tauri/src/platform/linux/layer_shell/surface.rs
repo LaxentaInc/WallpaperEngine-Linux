@@ -31,7 +31,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
         .with_exclusive_zone(-1)
         .with_margin((0, 0, 0, 0))
         .with_keyboard_interacivity(KeyboardInteractivity::None)
-        .with_output_option(OutputOption::OutputName(monitor.name.clone()))
+        .with_output_option(OutputOption::OutputName(monitor.name.clone())) // this doesnt even exist 
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 

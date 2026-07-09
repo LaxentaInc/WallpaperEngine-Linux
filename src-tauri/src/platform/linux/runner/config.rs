@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct MpvConfig {
     /// path to the video file to play
     pub video_path: String,

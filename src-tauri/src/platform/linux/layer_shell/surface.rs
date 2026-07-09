@@ -5,7 +5,6 @@
 
 use layershellev::{
     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
-    OutputOption,
     calloop::channel,
 };
 use std::os::raw::c_void;
@@ -24,14 +23,19 @@ pub enum PlayerMessage {
 pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String) -> Result<(), String> {
     println!("[layer_shell] creating background surface on monitor '{}'", monitor.name);
 
-    // 1. Set up the layershellev state
+    // 1. set up the layershellev state
+    // with_xdg_output_name targets the specific monitor by its xdg output name
+    // (e.g. "HDMI-A-1", "eDP-1") which MonitorInfo.name already provides.
+    // with_events_transparent makes the surface ignore all pointer/keyboard input,
+    // so clicks fall through to desktop icons on the layer above.
     let ev: WindowState<()> = WindowState::new("colorwall-linux")
         .with_layer(Layer::Background)
         .with_anchor(Anchor::Bottom | Anchor::Left | Anchor::Right | Anchor::Top)
         .with_exclusive_zone(-1)
         .with_margin((0, 0, 0, 0))
         .with_keyboard_interacivity(KeyboardInteractivity::None)
-        .with_output_option(OutputOption::OutputName(monitor.name.clone())) // this doesnt even exist 
+        .with_xdg_output_name(monitor.name.clone())
+        .with_events_transparent(true)
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 

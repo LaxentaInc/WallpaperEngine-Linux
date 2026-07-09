@@ -43,7 +43,7 @@ dirs = "5"
 # so we share the exact same types. do NOT add wayland-client as a direct dep here,
 # it would cause a second copy with potentially different minor version = type mismatch.
 layershellev = { path = "layershellev/layershellev" }
-wayland-egl = "0.31"
+wayland-egl = "0.32"
 # 'dynamic' feature loads libEGL.so at runtime (equivalent to glad_egl in mpvpaper).
 # without it, khronos-egl only provides type definitions with no actual function calls.
 khronos-egl = { version = "6.0", features = ["dynamic"] }

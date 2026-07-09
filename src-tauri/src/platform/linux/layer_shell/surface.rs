@@ -98,7 +98,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                             // create the wayland-egl wrapper around the wl_surface.
                             // WlEglSurface::new calls wl_egl_window_create under the hood,
                             // which gives EGL a native window handle to render into.
-                            use wayland_client::Proxy;
+                            use layershellev::wayland_client::Proxy;
                             let surface = wayland_egl::WlEglSurface::new(
                                 unit.get_wlsurface().id(),
                                 width as i32,

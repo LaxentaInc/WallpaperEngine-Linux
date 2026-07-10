@@ -75,11 +75,23 @@ fn main() {
         loop_playback: true,
         volume: 0,
     };
+   // dummy MonitorInfo struct before passing it to run_player so the bin no die
+   // we haVE NOT IMPLEMENTED THIS YET
+    let monitor_info = colorwall_linux_lib::platform::linux::shared::types::MonitorInfo {
+        id: monitor_id.clone(),
+        name: monitor_id.clone(),
+        x: 0,
+        y: 0,
+        width: 1920,
+        height: 1080,
+        scale: 1.0,
+        primary: true,
+    };
 
     match shell_type.as_str() {
         "layer-shell" => {
             println!("[player] using platform/linux/layer_shell/ implementation");
-            if let Err(e) = colorwall_linux_lib::platform::linux::layer_shell::surface::run_player(&monitor_id, &config, socket_path) {
+            if let Err(e) = colorwall_linux_lib::platform::linux::layer_shell::surface::run_player(&monitor_info, &config, socket_path) {
                 eprintln!("[player] layer-shell error: {}", e);
                 std::process::exit(1);
             }

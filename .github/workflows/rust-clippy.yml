@@ -22,6 +22,9 @@ jobs:
   rust-clippy-analyze:
     name: Run rust-clippy analyzing
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
     permissions:
       contents: read
       security-events: write

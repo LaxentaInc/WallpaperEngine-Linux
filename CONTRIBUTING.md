@@ -13,7 +13,7 @@ If you add any native C dependencies (e.g., `libglib2.0-dev`), ensure they are i
 
 ## 2. Documentation & Error Logging (CRITICAL)
 
-When you encounter a compiler error, a segfault, or a Wayland protocol violation, you **MUST** document the fix in `docs/research/error_log_and_fixes.md`.
+When you encounter a compiler error, a segfault, or a Wayland protocol violation, you **MUST** document the fix in `docs/research/error_log_and_fixes.md` or create a new file such so, does not really matter, but we must log it clearly in the same format.
 
 This error log serves as the primary retrieval corpus for the project. Every entry must strictly follow this 4-part structure:
 

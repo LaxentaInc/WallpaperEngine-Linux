@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install system deps
-        run: sudo apt-get update && sudo apt-get install -y libwayland-dev libegl1-mesa-dev libxkbcommon-dev libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev
+        run: sudo apt-get update && sudo apt-get install -y libwayland-dev libegl1-mesa-dev libxkbcommon-dev libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev libmpv-dev
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af #@v1

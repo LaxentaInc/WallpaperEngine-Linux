@@ -20,6 +20,8 @@ jobs:
 
     - name: Cache cargo
       uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "src-tauri -> target"
 
     - name: Check formatting
       run: cargo fmt --check

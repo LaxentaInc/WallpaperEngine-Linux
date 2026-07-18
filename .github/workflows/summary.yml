@@ -55,9 +55,9 @@ jobs:
 
       - name: Run final AI inference
         id: inference
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@2
         with:
-          max-tokens: 4096
+          max-completion-tokens: 2000
           prompt: |
             You are reviewing a new issue to facilate it for the dev to find the related code quickly, do nothing extraordinary.
             Analyze the issue using the provided codebase search results and output a highly condensed markdown response.

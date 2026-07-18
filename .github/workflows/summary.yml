@@ -34,7 +34,7 @@ jobs:
           > search_results.txt
           
           printf "%s\n" "$KEYWORDS" | tr -d '\r' | while IFS= read -r RAW_KEYWORD; do
-            KEYWORD=$(echo "$RAW_KEYWORD")
+            KEYWORD=$(echo "$RAW_KEYWORD" | xargs)
             if [ "$KEYWORD" != "None" ] && [ -n "$KEYWORD" ]; then
               echo "--- search results for: $KEYWORD ---" >> search_results.txt
               MATCHES=$(git grep -i -n -e "$KEYWORD" | head -n 30 || true)
@@ -72,12 +72,12 @@ jobs:
             **Summary**: [1 sentence summary]
             
             **Relevant Locations, quick points so the dev can find it, don't need to explain anything**:
-            - Format each grep match as a clickable link using exactly this format: `[filepath:line](https://github.com{{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`
+            - Format each grep match as a clickable link using exactly this format: `[filepath:line](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`
             - List all matches. Do not include verbose descriptions per link. Keep the list raw and dense.
             
             Code Search Results:
             ```
-            \${{ steps.search.outputs.results }}
+            ${{ steps.search.outputs.results }}
             ```
             
             Title: ${{ github.event.issue.title }}

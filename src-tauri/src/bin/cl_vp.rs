@@ -72,7 +72,7 @@ fn main() {
     let config = colorwall_linux_lib::platform::linux::runner::config::MpvConfig {
         video_path,
         window_id: 0,
-        loop_playback: true,
+        loop_playback: true, // TODO: REMOVE FROM SETTINGS, WE KEEP IT ON BY DEFAULT, NOT CONFIGRABLE
         volume: 0,
     };
    // dummy MonitorInfo struct before passing it to run_player so the bin no die

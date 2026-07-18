@@ -44,7 +44,8 @@ impl MpvPlayer {
             init.set_property("input-default-bindings", "no").unwrap();
             init.set_property("audio", "no").unwrap();
             init.set_property("border", "no").unwrap();
-            
+            // we will Loop by default
+            // TODO: KEEP THIS BUT REMOVE THIS FROM SETTINGS. SO No more config reads to set the property flag. 
             if config.loop_playback {
                 init.set_property("loop-file", "inf").unwrap();
             }

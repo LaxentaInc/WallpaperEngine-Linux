@@ -1,0 +1,2 @@
+cl_vp.rs ln 75: loop_playback: true, TODO: REMOVE FROM SETTINGS, WE KEEP IT ON BY DEFAULT, NOT CONFIGRABLE
+Ln 47: mpv.rs,  inside impl MpvPlayer, TODO: KEEP THIS BUT REMOVE THIS FROM SETTINGS. SO No more config reads to set the property flag. Remove the runner/config.rs read from it.

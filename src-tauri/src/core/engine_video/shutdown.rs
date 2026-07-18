@@ -7,6 +7,7 @@ use super::process_state::PLAYER_PROCESSES;
 use crate::platform::linux::shared::ipc;
 
 /// stop all wallpaper player processes across all monitors
+/// // TODO: check if linux has a job process functionlity like windows or it works on itself or sumthing else
 pub fn stop_all() -> Result<(), String> {
     let mut processes = PLAYER_PROCESSES.lock().unwrap();
     let monitors: Vec<String> = processes.keys().cloned().collect();

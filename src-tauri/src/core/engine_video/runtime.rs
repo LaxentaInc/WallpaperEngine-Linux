@@ -22,7 +22,9 @@ pub fn set_video_wallpaper(
     // stop any existing player on this monitor
     shutdown::stop_on_monitor(target);
 
-    // detect which shell capability to use
+    // detect which shell capability to 
+    // the shared folders detection.rs is called here
+    // and erm this is the orchestrator that wires everything up.
     let shell = detection::detect();
     let shell_name = match &shell {
         ShellCapability::LayerShell { compositor_name } => {

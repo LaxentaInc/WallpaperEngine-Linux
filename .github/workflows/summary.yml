@@ -22,7 +22,7 @@ jobs:
         with:
           prompt: |
             You are a codebase search assistant. Analyze the issue title and body below and extract a list of keywords to grep the codebase for context.
-            CRITICAL: You must extract at least 3 keywords (up to 8). If the issue mentions a specific term (e.g., 'libmpv'), do not just output that one term. Also include related architectural terms, synonyms, or nested concepts that might provide better context.
+            CRITICAL: You must extract at least 2 keywords (up to 5). If the issue mentions a specific term (e.g., 'libmpv'), do not just output that one term. Also include related architectural terms, synonyms, or nested concepts that might provide better context.
             Output ONLY a newline-separated list of raw keywords/phrases (one per line) without quotes, bullets, or extra text. If no keyword is applicable, output "None".
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
@@ -37,7 +37,8 @@ jobs:
             KEYWORD=$(echo "$RAW_KEYWORD" | xargs)
             if [ "$KEYWORD" != "None" ] && [ -n "$KEYWORD" ]; then
               echo "--- search results for: $KEYWORD ---" >> search_results.txt
-              MATCHES=$(git grep -i -n -e "$KEYWORD" | head -n 30 || true)
+              # extracts 2 lines of surrounding context (-C 2) per match for deeper ai comprehension, capped at 30 lines (approx 6 context blocks) and 150 chars to respect the strict 8k token ceiling.
+              MATCHES=$(git grep -i -n -C 2 -e "$KEYWORD" | head -n 30 | cut -c 1-150 || true)
               if [ -n "$MATCHES" ]; then
                 echo "$MATCHES" >> search_results.txt
               else
@@ -56,7 +57,7 @@ jobs:
         id: inference
         uses: actions/ai-inference@v2
         with:
-          model: 'openai/gpt-4o'
+          model: 'deepseek/deepseek-v3'
           # FIXED: Swapped max-tokens to the mandatory v2 parameter name
           max-completion-tokens: 2000
           # FIXED: Wrapped string evaluations in clean template tags to avoid YAML block parsing errors

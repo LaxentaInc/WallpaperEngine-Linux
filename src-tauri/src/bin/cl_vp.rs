@@ -90,8 +90,8 @@ fn main() {
 
     match shell_type.as_str() {
         "layer-shell" => {
-            println!("[player] using platform/linux/layer_shell/ implementation");
-            if let Err(e) = colorwall_linux_lib::platform::linux::layer_shell::surface::run_player(&monitor_info, &config, socket_path) {
+            println!("[player] using platform/linux/wayland/ implementation");
+            if let Err(e) = colorwall_linux_lib::platform::linux::wayland::surface::run_player(&monitor_info, &config, socket_path) {
                 eprintln!("[player] layer-shell error: {}", e);
                 std::process::exit(1);
             }

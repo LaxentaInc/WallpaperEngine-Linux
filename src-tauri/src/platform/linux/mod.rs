@@ -6,6 +6,6 @@
 
 pub mod shared;
 pub mod runner;
-pub mod layer_shell;
+pub mod wayland;
 pub mod x11;
 pub mod mutter;

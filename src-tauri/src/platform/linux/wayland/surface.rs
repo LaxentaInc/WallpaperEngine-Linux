@@ -1,4 +1,4 @@
-// layer_shell::surface - wlr-layer-shell unified player loop
+// wayland::surface - wlr-layer-shell unified player loop
 //
 // orchestrates the layershellev wayland connection, the EGL context,
 // and the MPV render pipeline in a single thread using calloop.
@@ -21,7 +21,7 @@ pub enum PlayerMessage {
 }
 
 pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String) -> Result<(), String> {
-    println!("[layer_shell] creating background surface on monitor '{}'", monitor.name);
+    println!("[wayland] creating background surface on monitor '{}'", monitor.name);
 
     // set up the layershellev state
     // with_xdg_output_name targets the specific monitor by its xdg output name
@@ -72,7 +72,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                         ReturnData::RequestBind
                     }
                     Err(e) => {
-                        eprintln!("[layer_shell] EGL Init Error: {}", e);
+                        eprintln!("[wayland] EGL Init Error: {}", e);
                         ReturnData::RequestExit
                     }
                 }
@@ -129,7 +129,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                 if let (Some(player), Some(egl)) = (mpv_player.as_mut(), egl_context.as_mut()) {
                     let (w, h) = current_size;
                     if let Err(e) = player.render_frame(egl, w as i32, h as i32) {
-                        eprintln!("[layer_shell] mpv render error: {}", e);
+                        eprintln!("[wayland] mpv render error: {}", e);
                     }
                 }
                 ReturnData::None

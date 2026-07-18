@@ -1,4 +1,4 @@
-// layer_shell::monitors - wayland monitor enumeration
+// wayland::monitors - wayland monitor enumeration
 //
 // on wayland, monitors are represented as wl_output globals.
 // each wl_output provides: name, make, model, resolution,
@@ -21,6 +21,6 @@ pub fn enumerate() -> Result<Vec<MonitorInfo>, String> {
     // 3. for each wl_output, collect name, geometry, mode, scale
     // 4. optionally bind xdg-output-manager for logical coordinates
     // 5. map everything into MonitorInfo structs
-    println!("[layer_shell::monitors] enumerating wayland outputs");
+    println!("[wayland::monitors] enumerating wayland outputs");
     Err("wayland monitor enumeration not implemented yet".to_string())
 }

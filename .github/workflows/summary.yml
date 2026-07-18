@@ -37,8 +37,8 @@ jobs:
             KEYWORD=$(echo "$RAW_KEYWORD" | xargs)
             if [ "$KEYWORD" != "None" ] && [ -n "$KEYWORD" ]; then
               echo "--- search results for: $KEYWORD ---" >> search_results.txt
-              # extracts 2 lines of surrounding context (-C 2) per match for deeper ai comprehension, capped at 30 lines (approx 6 context blocks) and 150 chars to respect the strict 8k token ceiling.
-              MATCHES=$(git grep -i -n -C 2 -e "$KEYWORD" | head -n 30 | cut -c 1-150 || true)
+              # targets only actual source code and the critical error log, excluding noisy root markdowns. increased context cap to 60 lines (approx 12 blocks) per keyword to feed the ai more code without breaching the 8k token ceiling.
+              MATCHES=$(git grep -i -n -C 2 -e "$KEYWORD" -- "*.rs" "*.ts" "*.tsx" "*.js" "*.css" "*.toml" "*.json" "docs/research/error_log_and_fixes.md" 2>/dev/null | head -n 60 | cut -c 1-120 || true)
               if [ -n "$MATCHES" ]; then
                 echo "$MATCHES" >> search_results.txt
               else
@@ -58,25 +58,21 @@ jobs:
         uses: actions/ai-inference@v2
         with:
           model: 'openai/gpt-4o'
-          # FIXED: Swapped max-tokens to the mandatory v2 parameter name
           max-completion-tokens: 2000
-          # FIXED: Wrapped string evaluations in clean template tags to avoid YAML block parsing errors
           prompt: |
-            You are reviewing a new issue to facilitate it for the dev to find the related code quickly, do nothing extraordinary.
-            Analyze the issue using the provided codebase search results and output a highly condensed markdown response.
+            You are reviewing a new issue to facilitate the devs to find the related code quickly, do nothing extraordinary. Keep.
             
-            Follow this exact structure without any extra fluff:
-            [Emoji] [One short polite greeting sentence no extras]
-            
+            Follow:
+            [Emoji] [One short polite greeting sentence to the user who opened the issue]
             **Severity**: [Low/Medium/High/Critical] | **Type**: [Bug/Feature/Question]
             
             **Summary**: [1 sentence summary]
             
             **Relevant Locations, quick points so the dev can find it, don't need to explain anything**:
-            - Format each grep match as a clickable link using exactly this format: `[filepath:line](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`
-            - List all matches. Do not include verbose descriptions per link. Keep the list raw and dense.
+            CRITICAL INSTRUCTION: You MUST format EVERY single location as a clickable markdown link using this EXACT syntax: `[filepath:line](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`. If you output raw text like `file.rs:10`, you have failed.
+            - List all matches. Do not include verbose descriptions. Keep it dense.
             
-            Code Search Results:
+            Code Search Results given by system:
             ```
             ${{ steps.search.outputs.results }}
             ```
@@ -85,7 +81,6 @@ jobs:
             Body: ${{ github.event.issue.body }}
 
       - name: Comment with AI summary
-        # FIXED: Enclosed the multiline payload inside single quotes and handles token arguments explicitly
         run: |
           gh issue comment "$ISSUE_NUMBER" --body "$RESPONSE"
         env:

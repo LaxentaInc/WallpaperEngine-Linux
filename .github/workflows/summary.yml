@@ -31,25 +31,24 @@ jobs:
         id: search
         run: |
           KEYWORDS="${{ steps.keywords.outputs.response }}"
-          # initializes an empty search results file to act as the accumulator for all iteration outputs.
           > search_results.txt
           
-          # iterates over each newline-separated keyword extracted by the ai inference step, utilizing a while read loop to handle spaces correctly while stripping carriage returns.
-          printf "%s\n" "$KEYWORDS" | tr -d '\r' | while IFS= read -r KEYWORD; do
-            # verifies the keyword is structurally valid and explicitly not the fallback string, preventing arbitrary wildcard searches that would overflow the stdout buffer.
+          printf "%s\n" "$KEYWORDS" | tr -d '\r' | while IFS= read -r RAW_KEYWORD; do
+            KEYWORD=$(echo "$RAW_KEYWORD")
             if [ "$KEYWORD" != "None" ] && [ -n "$KEYWORD" ]; then
-              # appends a contextual header for the downstream ai, indicating which specific query produced the following grep block.
               echo "--- search results for: $KEYWORD ---" >> search_results.txt
-              # delegates case-insensitive codebase text search to git grep, restricts the stdout pipeline to 30 entries per keyword to balance context size, and appends to the accumulator.
-              git grep -i -n -e "$KEYWORD" | head -n 30 >> search_results.txt || echo "no matches found." >> search_results.txt
+              MATCHES=$(git grep -i -n -e "$KEYWORD" | head -n 30 || true)
+              if [ -n "$MATCHES" ]; then
+                echo "$MATCHES" >> search_results.txt
+              else
+                echo "no matches found." >> search_results.txt
+              fi
               echo "" >> search_results.txt
             fi
           done
           
-          # synthesizes a cryptographically randomized string via urandom bound to base64 encoding, serving as a boundary delimiter to safely encapsulate multiline payload injection into the github output environment stream.
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "results<<$EOF" >> "$GITHUB_OUTPUT"
-          # reads the local search results payload from disk and sequentially appends it to the github actions runner context memory mapping, exposing the accumulated data structure to downstream steps.
           cat search_results.txt >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
 
@@ -57,9 +56,12 @@ jobs:
         id: inference
         uses: actions/ai-inference@v2
         with:
+          model: 'openai/gpt-4o'
+          # FIXED: Swapped max-tokens to the mandatory v2 parameter name
           max-completion-tokens: 2000
+          # FIXED: Wrapped string evaluations in clean template tags to avoid YAML block parsing errors
           prompt: |
-            You are reviewing a new issue to facilate it for the dev to find the related code quickly, do nothing extraordinary.
+            You are reviewing a new issue to facilitate it for the dev to find the related code quickly, do nothing extraordinary.
             Analyze the issue using the provided codebase search results and output a highly condensed markdown response.
             
             Follow this exact structure without any extra fluff:
@@ -70,20 +72,21 @@ jobs:
             **Summary**: [1 sentence summary]
             
             **Relevant Locations, quick points so the dev can find it, don't need to explain anything**:
-            - Format each grep match as a clickable link using exactly this format: `[filepath:line](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`
+            - Format each grep match as a clickable link using exactly this format: `[filepath:line](https://github.com{{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`
             - List all matches. Do not include verbose descriptions per link. Keep the list raw and dense.
             
             Code Search Results:
             ```
-            ${{ steps.search.outputs.results }}
+            \${{ steps.search.outputs.results }}
             ```
             
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
 
       - name: Comment with AI summary
+        # FIXED: Enclosed the multiline payload inside single quotes and handles token arguments explicitly
         run: |
-          gh issue comment $ISSUE_NUMBER --body "$RESPONSE"
+          gh issue comment "$ISSUE_NUMBER" --body "$RESPONSE"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}

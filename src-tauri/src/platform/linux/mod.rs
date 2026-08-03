@@ -8,4 +8,3 @@ pub mod shared;
 pub mod runner;
 pub mod wayland;
 pub mod x11;
-pub mod mutter;

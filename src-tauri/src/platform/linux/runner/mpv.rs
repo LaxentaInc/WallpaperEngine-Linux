@@ -4,9 +4,9 @@
 // and sets up the libmpv render API to paint frames via OpenGL onto the Wayland surface.
 
 use super::config::MpvConfig;
-use crate::platform::linux::wayland::egl::EglContext;
+use crate::platform::linux::wayland::layer_shell::egl::EglContext;
 use layershellev::calloop::channel::Sender;
-use crate::platform::linux::wayland::surface::PlayerMessage;
+use crate::platform::linux::wayland::layer_shell::surface::PlayerMessage;
 use libmpv2::{
     Mpv,
     render::{OpenGLInitParams, RenderParam, RenderParamApiType},

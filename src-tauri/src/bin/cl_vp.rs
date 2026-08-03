@@ -90,8 +90,8 @@ fn main() {
 
     match shell_type.as_str() {
         "layer-shell" => {
-            println!("[player] using platform/linux/wayland/ implementation");
-            if let Err(e) = colorwall_linux_lib::platform::linux::wayland::surface::run_player(&monitor_info, &config, socket_path) {
+            println!("[player] using platform/linux/wayland/layer_shell/ implementation");
+            if let Err(e) = colorwall_linux_lib::platform::linux::wayland::layer_shell::surface::run_player(&monitor_info, &config, socket_path) {
                 eprintln!("[player] layer-shell error: {}", e);
                 std::process::exit(1);
             }
@@ -101,8 +101,8 @@ fn main() {
             // todo: call platform::linux::x11::surface::run_player()
         }
         "mutter" => {
-            println!("[player] using platform/linux/mutter/ implementation (TODO)");
-            // todo: call platform::linux::mutter::surface::run_player()
+            println!("[player] using platform/linux/wayland/mutter/ implementation (TODO)");
+            // todo: call platform::linux::wayland::mutter::surface::run_player()
         }
         _ => {
             eprintln!("[player] error: unknown shell type '{}'. expected: layer-shell, x11, mutter", shell_type);

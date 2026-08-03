@@ -25,14 +25,19 @@ pub struct MpvPlayer {
 }
 
 impl MpvPlayer {
+    #[tracing::instrument(skip_all)]
     pub fn new(
         config: &MpvConfig,
         egl_context: &EglContext,
         event_sender: Sender<PlayerMessage>,
     ) -> Result<Self, String> {
-        println!("[mpv] initializing libmpv context with EGL render API...");
+        tracing::info!("[mpv] initializing libmpv context with EGL render API...");
         
         let mpv = Mpv::with_initializer(|init| {
+            // lock down mpv to prevent it from spawning its own window
+            init.set_property("config", "no").unwrap();
+            init.set_property("force-window", "no").unwrap();
+            
             init.set_property("vo", "libmpv").unwrap();
             init.set_property("hwdec", "auto-safe").unwrap();
             
@@ -71,7 +76,7 @@ impl MpvPlayer {
             let _ = event_sender.send(PlayerMessage::MpvRedrawRequested);
         });
 
-        println!("[mpv] loading video: {}", config.video_path);
+        tracing::info!("loading video: {}", config.video_path);
         mpv_ref.command("loadfile", &[&config.video_path])
             .map_err(|e| format!("failed to load video: {}", e))?;
 
@@ -82,6 +87,7 @@ impl MpvPlayer {
     }
 
     /// Instructs MPV to render the current frame and swaps EGL buffers
+    #[tracing::instrument(skip_all)]
     pub fn render_frame(&mut self, egl_context: &EglContext, width: i32, height: i32) -> Result<(), String> {
         self.render_context.render::<()>(0, width, height, true)
             .map_err(|e| format!("mpv render error: {:?}", e))?;

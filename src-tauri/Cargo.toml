@@ -37,6 +37,9 @@ serde_json = "1"
 # --- utilities ---
 lazy_static = "1.4"
 dirs = "5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
 
 # --- wayland + layer shell ---
 # layershellev local fork - re-exports wayland_client, wayland_backend, and calloop

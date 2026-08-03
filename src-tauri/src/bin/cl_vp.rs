@@ -15,6 +15,14 @@
 // this file is just the orchestrator that wires everything up.
 
 fn main() {
+    let file_appender = tracing_appender::rolling::never("/tmp", "colorwall-player.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env().add_directive(tracing_subscriber::filter::LevelFilter::INFO.into()))
+        .with_writer(non_blocking)
+        .init();
+
     let args: Vec<String> = std::env::args().collect();
 
     let mut video_path = String::new();
@@ -55,16 +63,16 @@ fn main() {
         i += 1;
     }
 
-    println!("╔══════════════════════════════════════════════════╗");
-    println!("║        cl-video-player — colorwall linux         ║");
-    println!("╚══════════════════════════════════════════════════╝");
-    println!("[player] video:   {}", video_path);
-    println!("[player] monitor: {}", monitor_id);
-    println!("[player] shell:   {}", shell_type);
-    println!("[player] socket:  {}", socket_path);
+    tracing::info!("══════════════════════════════════════════════════");
+    tracing::info!("       cl-video-player — colorwall linux        ");
+    tracing::info!("══════════════════════════════════════════════════");
+    tracing::info!("video:   {}", video_path);
+    tracing::info!("monitor: {}", monitor_id);
+    tracing::info!("shell:   {}", shell_type);
+    tracing::info!("socket:  {}", socket_path);
 
     if video_path.is_empty() {
-        eprintln!("[player] error: no video path provided (--video <path>)");
+        tracing::error!("no video path provided (--video <path>)");
         std::process::exit(1);
     }
 
@@ -90,22 +98,22 @@ fn main() {
 
     match shell_type.as_str() {
         "layer-shell" => {
-            println!("[player] using platform/linux/wayland/layer_shell/ implementation");
+            tracing::info!("using platform/linux/wayland/layer_shell/ implementation");
             if let Err(e) = colorwall_linux_lib::platform::linux::wayland::layer_shell::surface::run_player(&monitor_info, &config, socket_path) {
-                eprintln!("[player] layer-shell error: {}", e);
+                tracing::error!("layer-shell error: {}", e);
                 std::process::exit(1);
             }
         }
         "x11" => {
-            println!("[player] using platform/linux/x11/ implementation (TODO)");
+            tracing::info!("using platform/linux/x11/ implementation (TODO)");
             // todo: call platform::linux::x11::surface::run_player()
         }
         "mutter" => {
-            println!("[player] using platform/linux/wayland/mutter/ implementation (TODO)");
+            tracing::info!("using platform/linux/wayland/mutter/ implementation (TODO)");
             // todo: call platform::linux::wayland::mutter::surface::run_player()
         }
         _ => {
-            eprintln!("[player] error: unknown shell type '{}'. expected: layer-shell, x11, mutter", shell_type);
+            tracing::error!("unknown shell type '{}'. expected: layer-shell, x11, mutter", shell_type);
             std::process::exit(1);
         }
     }

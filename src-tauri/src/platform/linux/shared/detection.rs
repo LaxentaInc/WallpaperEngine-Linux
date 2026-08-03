@@ -30,6 +30,7 @@ const LAYER_SHELL_COMPOSITORS: &[&str] = &[
 /// 2. if wayland, check XDG_CURRENT_DESKTOP and compositor-specific env vars
 ///    to determine if layer-shell is supported
 /// 3. if x11, return X11 capability (all x11 WMs support EWMH)
+#[tracing::instrument]
 pub fn detect() -> ShellCapability {
     let session_type = std::env::var("XDG_SESSION_TYPE")
         .unwrap_or_default()
@@ -41,7 +42,7 @@ pub fn detect() -> ShellCapability {
     match session_type.as_str() {
         "wayland" => detect_wayland_compositor(&desktop, &desktop_lower),
         "x11" | "tty" => {
-            println!("[detection] x11 session detected: {}", desktop);
+            tracing::info!("x11 session detected: {}", desktop);
             ShellCapability::X11 { desktop }
         }
         _ => {
@@ -50,10 +51,10 @@ pub fn detect() -> ShellCapability {
                 return detect_wayland_compositor(&desktop, &desktop_lower);
             }
             if std::env::var("DISPLAY").is_ok() {
-                println!("[detection] x11 detected via DISPLAY env");
+                tracing::info!("x11 detected via DISPLAY env");
                 return ShellCapability::X11 { desktop };
             }
-            println!("[detection] could not detect display server");
+            tracing::info!("could not detect display server");
             ShellCapability::Unknown
         }
     }
@@ -66,7 +67,7 @@ fn detect_wayland_compositor(desktop: &str, desktop_lower: &str) -> ShellCapabil
     // check for known wlroots-based compositors (all support layer-shell)
     for &compositor in LAYER_SHELL_COMPOSITORS {
         if desktop_lower.contains(compositor) {
-            println!("[detection] layer-shell compositor: {}", desktop);
+            tracing::info!("layer-shell compositor: {}", desktop);
             return ShellCapability::LayerShell {
                 compositor_name: compositor.to_string(),
             };
@@ -75,7 +76,7 @@ fn detect_wayland_compositor(desktop: &str, desktop_lower: &str) -> ShellCapabil
 
     // hyprland sets its own env var even if XDG_CURRENT_DESKTOP is weird
     if std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() {
-        println!("[detection] hyprland detected via instance signature");
+        tracing::info!("hyprland detected via instance signature");
         return ShellCapability::LayerShell {
             compositor_name: "hyprland".to_string(),
         };
@@ -83,7 +84,7 @@ fn detect_wayland_compositor(desktop: &str, desktop_lower: &str) -> ShellCapabil
 
     // kde plasma (kwin) now supports layer-shell
     if desktop_lower.contains("kde") || desktop_lower.contains("plasma") {
-        println!("[detection] kde plasma detected (kwin, layer-shell supported)");
+        tracing::info!("kde plasma detected (kwin, layer-shell supported)");
         return ShellCapability::LayerShell {
             compositor_name: "kwin".to_string(),
         };
@@ -91,7 +92,7 @@ fn detect_wayland_compositor(desktop: &str, desktop_lower: &str) -> ShellCapabil
 
     // cosmic (pop!_os) supports layer-shell via smithay
     if desktop_lower.contains("cosmic") {
-        println!("[detection] cosmic detected (layer-shell supported)");
+        tracing::info!("cosmic detected (layer-shell supported)");
         return ShellCapability::LayerShell {
             compositor_name: "cosmic".to_string(),
         };
@@ -99,14 +100,14 @@ fn detect_wayland_compositor(desktop: &str, desktop_lower: &str) -> ShellCapabil
 
     // gnome / mutter - the one compositor that REFUSES layer-shell
     if desktop_lower.contains("gnome") || desktop_lower.contains("ubuntu") {
-        println!("[detection] gnome/mutter detected (NO layer-shell, using fallback)");
+        tracing::info!("gnome/mutter detected (NO layer-shell, using fallback)");
         return ShellCapability::Mutter;
     }
 
     // unknown wayland compositor - optimistically try layer-shell
     // since most modern compositors support it
-    println!(
-        "[detection] unknown wayland compositor: '{}', attempting layer-shell",
+    tracing::info!(
+        "unknown wayland compositor: '{}', attempting layer-shell",
         desktop
     );
     ShellCapability::LayerShell {

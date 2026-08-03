@@ -3,7 +3,8 @@
 // handles resolving video paths, detecting the shell, and executing
 // the child process with the correct arguments.
 
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::os::unix::process::CommandExt;
 
 use super::paths;
 use super::shutdown;
@@ -12,6 +13,7 @@ use crate::platform::linux::shared::detection;
 use crate::platform::linux::shared::types::ShellCapability;
 
 /// start a video wallpaper on a specific monitor
+#[tracing::instrument(skip_all, fields(monitor = monitor_id.unwrap_or("primary")))]
 pub fn set_video_wallpaper(
     _app: &tauri::AppHandle,
     video_path: &str,
@@ -34,8 +36,8 @@ pub fn set_video_wallpaper(
         ShellCapability::Mutter => "mutter".to_string(),
         ShellCapability::Unknown => "unknown".to_string(),
     };
-    println!(
-        "[engine_video] setting wallpaper on '{}' (shell: {})",
+    tracing::info!(
+        "setting wallpaper on '{}' (shell: {})",
         target, shell_name
     );
 
@@ -57,8 +59,8 @@ pub fn set_video_wallpaper(
         ShellCapability::Unknown => "unknown",
     };
 
-    println!(
-        "[engine_video] spawning: {} --video {} --monitor {} --shell {} --socket {}",
+    tracing::info!(
+        "spawning: {} --video {} --monitor {} --shell {} --socket {}",
         player_path.display(),
         video_path_abs.display(),
         target,
@@ -75,11 +77,14 @@ pub fn set_video_wallpaper(
         .arg(shell_arg)
         .arg("--socket")
         .arg(&socket_path)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .process_group(0)
         .spawn()
         .map_err(|e| format!("failed to spawn cl-video-player: {}", e))?;
 
     let pid = child.id();
-    println!("[engine_video] cl-video-player spawned with pid: {}", pid);
+    tracing::info!("cl-video-player spawned with pid: {}", pid);
 
     let mut processes = PLAYER_PROCESSES.lock().unwrap();
     processes.insert(

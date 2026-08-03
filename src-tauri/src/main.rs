@@ -7,6 +7,11 @@
 use tauri::Manager;
 
 fn main() {
+    // initialize tracing for the main tauri host
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -17,8 +22,8 @@ fn main() {
             colorwall_linux_lib::ui::commands::system_info::cmd_get_display_info,
         ])
         .setup(|app| {
-            println!(
-                "[colorwall] starting colorwall linux v{}",
+            tracing::info!(
+                "starting colorwall linux v{}",
                 env!("CARGO_PKG_VERSION")
             );
 
@@ -30,7 +35,7 @@ fn main() {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
                     let _ = window_clone.hide();
-                    println!("[colorwall] window hidden to tray");
+                    tracing::info!("window hidden to tray");
                 }
             });
 
@@ -38,7 +43,7 @@ fn main() {
 
             // detect and log the compositor at startup
             let shell = colorwall_linux_lib::platform::linux::shared::detection::detect();
-            println!("[colorwall] detected shell: {:?}", shell);
+            tracing::info!("detected shell: {:?}", shell);
 
             Ok(())
         })

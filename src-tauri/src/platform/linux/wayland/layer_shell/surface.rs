@@ -20,8 +20,9 @@ pub enum PlayerMessage {
     IpcCommand(String),
 }
 
+#[tracing::instrument(skip_all)]
 pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String) -> Result<(), String> {
-    println!("[wayland] creating background surface on monitor '{}'", monitor.name);
+    tracing::info!("creating background surface on monitor '{}'", monitor.name);
 
     // set up the layershellev state
     // with_xdg_output_name targets the specific monitor by its xdg output name
@@ -72,7 +73,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                         ReturnData::RequestBind
                     }
                     Err(e) => {
-                        eprintln!("[wayland] EGL Init Error: {}", e);
+                        tracing::error!("EGL Init Error: {}", e);
                         ReturnData::RequestExit
                     }
                 }
@@ -129,13 +130,13 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                 if let (Some(player), Some(egl)) = (mpv_player.as_mut(), egl_context.as_mut()) {
                     let (w, h) = current_size;
                     if let Err(e) = player.render_frame(egl, w as i32, h as i32) {
-                        eprintln!("[wayland] mpv render error: {}", e);
+                        tracing::error!("mpv render error: {}", e);
                     }
                 }
                 ReturnData::None
             }
             LayerShellEvent::UserEvent(PlayerMessage::IpcCommand(cmd)) => {
-                println!("[player] IPC command received: {}", cmd);
+                tracing::info!("IPC command received: {}", cmd);
                 if cmd == "STOP" {
                     ReturnData::RequestExit
                 } else {

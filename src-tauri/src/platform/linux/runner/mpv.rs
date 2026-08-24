@@ -35,24 +35,24 @@ impl MpvPlayer {
         
         let mpv = Mpv::with_initializer(|init| {
             // lock down mpv to prevent it from spawning its own window
-            init.set_property("config", "no").unwrap();
-            init.set_property("force-window", "no").unwrap();
+            let _ = init.set_property("config", "no");
+            let _ = init.set_property("force-window", "no");
             
-            init.set_property("vo", "libmpv").unwrap();
-            init.set_property("hwdec", "auto-safe").unwrap();
+            let _ = init.set_property("vo", "libmpv");
+            let _ = init.set_property("hwdec", "auto-safe");
             
-            init.set_property("profile", "fast").unwrap();
-            init.set_property("vd-lavc-fast", "yes").unwrap();
-            init.set_property("vd-lavc-skiploopfilter", "all").unwrap();
-            init.set_property("osc", "no").unwrap();
-            init.set_property("window-dragging", "no").unwrap();
-            init.set_property("input-default-bindings", "no").unwrap();
-            init.set_property("audio", "no").unwrap();
-            init.set_property("border", "no").unwrap();
+            let _ = init.set_property("profile", "fast");
+            let _ = init.set_property("vd-lavc-fast", "yes");
+            let _ = init.set_property("vd-lavc-skiploopfilter", "all");
+            let _ = init.set_property("osc", "no");
+            let _ = init.set_property("window-dragging", "no");
+            let _ = init.set_property("input-default-bindings", "no");
+            let _ = init.set_property("audio", "no");
+            let _ = init.set_property("border", "no");
             // we will Loop by default
             // TODO: KEEP THIS BUT REMOVE THIS FROM SETTINGS. SO No more config reads to set the property flag. 
             if config.loop_playback {
-                init.set_property("loop-file", "inf").unwrap();
+                let _ = init.set_property("loop-file", "inf");
             }
             init.set_property("volume", config.volume as i64).unwrap();
             Ok(())

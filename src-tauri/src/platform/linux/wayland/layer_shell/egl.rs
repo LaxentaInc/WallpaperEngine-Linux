@@ -66,12 +66,12 @@ impl EglContext {
         // this must happen after make_current so the GL context is active.
 
 
-        // So the explaination goes: OpenGL is an API specification, not a hardcoded library built into your executable.
-        // The actual implementation of functions like glViewport lives inside your graphics card driver 
+        // So the explaination goes: OpenGL is an API specification, not a hardcoded library built into our executable.
+        // The actual implementation of functions like glViewport lives inside our graphics card driver 
         // (Nvidia, AMD, Intel, or Mesa).
         // Because the operating system doesn't link these functions automatically at compile time,
-        //  your program initializes them as empty, NULL pointers.If you call gl::Viewport while it is NULL, 
-        // your program attempts to execute code at memory address 0, causing an immediate crash.
+        // our (not your) program initializes them as empty, NULL pointers.If you call gl::Viewport while it is NULL, 
+        // our program attempts to execute code at memory address 0, causing an immediate crash.
         // What gl::load_with fills them withThe gl::load_with function acts as a dynamic finder. It talks 
         // to the system's graphics driver to fetch the actual memory addresses of the compiled OpenGL functions
         //  and swaps out the NULL pointers with those real addresses.To do this, gl::load_with requires two things:
@@ -86,7 +86,7 @@ impl EglContext {
         gl::load_with(|name| {
             egl.get_proc_address(name)
                 .map(|f| f as *const std::ffi::c_void)
-                .unwrap_or(std::ptr::null())
+                .unwrap_or(std::ptr::null()) // this might be a problemo because it is same as panic abort but will crash the app, works ig but i will see, it is just ehh first few passes
         });
 
         Ok(Self {

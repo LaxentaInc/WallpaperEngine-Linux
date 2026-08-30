@@ -88,12 +88,12 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
                     let region = compositor.create_region(qh, ());
                     region.add(0, 0, 0, 0); 
                     x.get_wlsurface().set_input_region(Some(&region));
+                    x.get_wlsurface().commit();
                 }
                 ReturnData::None
             }
-            LayerShellEvent::XdgInfoChanged(_) => {
+            LayerShellEvent::RequestMessages(&layershellev::DispatchMessage::RequestRefresh { width, height, .. }) => {
                 if let Some(unit) = window_state.get_unit_iter().next() {
-                    let (width, height) = unit.get_size();
                     if width > 0 && height > 0 && current_size != (width, height) {
                         current_size = (width, height);
                         

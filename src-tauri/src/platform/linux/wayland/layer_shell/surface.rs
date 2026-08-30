@@ -38,6 +38,7 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
         // causes Wayland to reject the layer. falling back to default monitor.
         // .with_xdg_output_name(monitor.name.clone())
         .with_events_transparent(true)
+        .with_use_display_handle(true)
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 

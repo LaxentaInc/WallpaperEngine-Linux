@@ -35,3 +35,4 @@ log.workspace = true
 
 waycrate_xkbkeycode.workspace = true
 sctk.workspace = true
+# force cache invalidation for the clone fix

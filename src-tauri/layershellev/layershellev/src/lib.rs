@@ -2450,7 +2450,7 @@ impl<T: 'static> WindowState<T> {
         let fractional_scale_manager = self.fractional_scale_manager.take();
         let cursor_manager: Option<WpCursorShapeManagerV1> = self.cursor_manager.take();
         let xdg_output_manager = self.xdg_output_manager.take().unwrap();
-        let connection = self.connection.take().unwrap();
+        let connection = self.connection.clone().unwrap();
         let mut init_event = None;
         let wmbase = self.wmbase.take().unwrap();
         let viewporter = self.viewporter.take();

@@ -129,6 +129,8 @@ impl MpvPlayer {
         // without this, OpenGL uses whatever default viewport was set during
         // context creation, causing the video to render at the wrong size
         // (the "shrunk from both sides" bug).
+        // The instruction at 0x00007FFCD04041CC referenced memory at 0x0000000000000000
+        // OFCOURSE IT CRASHED THE WHOLE VM.
         unsafe {
             gl::Viewport(0, 0, width, height);
         }

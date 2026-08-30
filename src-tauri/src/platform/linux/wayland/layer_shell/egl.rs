@@ -64,6 +64,25 @@ impl EglContext {
         // the `gl` crate is a static dispatch table that starts as all null pointers;
         // gl::load_with fills it by calling eglGetProcAddress for each GL symbol.
         // this must happen after make_current so the GL context is active.
+
+
+        // So the explaination goes: OpenGL is an API specification, not a hardcoded library built into your executable.
+        // The actual implementation of functions like glViewport lives inside your graphics card driver 
+        // (Nvidia, AMD, Intel, or Mesa).
+        // Because the operating system doesn't link these functions automatically at compile time,
+        //  your program initializes them as empty, NULL pointers.If you call gl::Viewport while it is NULL, 
+        // your program attempts to execute code at memory address 0, causing an immediate crash.
+        // What gl::load_with fills them withThe gl::load_with function acts as a dynamic finder. It talks 
+        // to the system's graphics driver to fetch the actual memory addresses of the compiled OpenGL functions
+        //  and swaps out the NULL pointers with those real addresses.To do this, gl::load_with requires two things:
+        // An active EGL/GL Context: The graphics driver will only reveal function addresses if a valid OpenGL 
+        // context is currently active on the calling thread.
+        // A loader function: You pass a helper function (like eglGetProcAddress) into gl::load_with.
+        // loads       unsafe {
+        //     gl::Viewport(0, 0, width, height);
+        // }
+        // with vieports coordinates by querying the driver as a medium and filling the x00 values that the code might try to access and get probable access violations? probably crash. ( in mpv )
+        // path to: C:\Users\MY-PC\Documents\WallpaperEngine-Linux\src-tauri\src\platform\linux\runner
         gl::load_with(|name| {
             egl.get_proc_address(name)
                 .map(|f| f as *const std::ffi::c_void)

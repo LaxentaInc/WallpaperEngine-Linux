@@ -9,9 +9,15 @@ use layershellev::calloop::channel::Sender;
 use crate::platform::linux::wayland::layer_shell::surface::PlayerMessage;
 use libmpv2::{
     Mpv,
-    render::{OpenGLInitParams, RenderParam, RenderParamApiType},
+    render::{OpenGLInitParams, RenderParam, RenderParamApiType, mpv_render_update},
 };
 use std::ffi::c_void;
+use std::time::Instant;
+
+/// minimum interval between renders (~60fps).
+/// prevents flooding the compositor when mpv fires update callbacks faster
+/// than the display can present frames (especially brutal on software decoding in vms).
+const MIN_FRAME_INTERVAL_MS: u128 = 16;
 
 /// helper to unwrap the context pointer and pass to our EGL proc loader
 fn mpv_get_proc_address(ctx: &*const c_void, name: &str) -> *mut c_void {
@@ -22,6 +28,9 @@ fn mpv_get_proc_address(ctx: &*const c_void, name: &str) -> *mut c_void {
 pub struct MpvPlayer {
     pub mpv: &'static Mpv,
     pub render_context: libmpv2::render::RenderContext<'static>,
+    /// tracks the last time we actually rendered a frame to throttle
+    /// the render loop to ~60fps and avoid flooding the compositor.
+    last_render_time: Instant,
 }
 
 impl MpvPlayer {
@@ -83,19 +92,60 @@ impl MpvPlayer {
         Ok(Self {
             mpv: mpv_ref,
             render_context,
+            last_render_time: Instant::now(),
         })
     }
 
-    /// Instructs MPV to render the current frame and swaps EGL buffers
+    /// renders the current mpv frame to the EGL surface.
+    ///
+    /// this method implements three critical safeguards from mpvpaper's architecture:
+    /// 1. calls render_context.update() FIRST to check if a new frame is actually
+    ///    pending. if not, skips the render entirely to avoid redundant GPU work.
+    /// 2. calls glViewport before render to ensure the OpenGL framebuffer matches
+    ///    the actual EGL surface dimensions (fixes video not filling monitor).
+    /// 3. calls report_swap() AFTER eglSwapBuffers to tell libmpv the buffer was
+    ///    presented, releasing GL fence objects and preventing memory leaks.
     #[tracing::instrument(skip_all)]
     pub fn render_frame(&mut self, egl_context: &EglContext, width: i32, height: i32) -> Result<(), String> {
+        // timestamp-based throttle: skip if we rendered less than 16ms ago.
+        // prevents the compositor from being flooded with frames faster than
+        // the display refresh rate, which causes buffer overflows and crashes.
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.last_render_time).as_millis();
+        if elapsed < MIN_FRAME_INTERVAL_MS {
+            return Ok(());
+        }
+
+        // ask mpv if there is actually a new frame to render.
+        // update() returns a bitflag; the Frame bit means "call render()".
+        // without this check, we'd re-render stale frames on every event loop tick.
+        let flags = self.render_context.update()
+            .map_err(|e| format!("mpv context update error: {:?}", e))?;
+        if (flags & mpv_render_update::Frame) == 0 {
+            return Ok(());
+        }
+
+        // set the OpenGL viewport to match the full EGL surface dimensions.
+        // without this, OpenGL uses whatever default viewport was set during
+        // context creation, causing the video to render at the wrong size
+        // (the "shrunk from both sides" bug).
+        unsafe {
+            gl::Viewport(0, 0, width, height);
+        }
+
         self.render_context.render::<()>(0, width, height, true)
             .map_err(|e| format!("mpv render error: {:?}", e))?;
             
         egl_context.swap_buffers()?;
         
-        self.render_context.update()
-            .map_err(|e| format!("mpv context update error: {:?}", e))?;
+        // inform libmpv that the buffer has been presented to the compositor.
+        // this releases GL fence objects and internal resources associated with
+        // the rendered frame. without this call, libmpv accumulates unreleased
+        // GPU sync objects every frame, causing a memory leak that eventually
+        // triggers the OOM killer (the "30 second crash" bug).
+        self.render_context.report_swap();
+
+        self.last_render_time = now;
         Ok(())
     }
 }

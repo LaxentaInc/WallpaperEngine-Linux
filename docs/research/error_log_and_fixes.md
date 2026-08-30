@@ -84,3 +84,27 @@ This document serves as a historical log of every technical hurdle, compilation 
 **File:** `src-tauri/src/platform/linux/runner/mpv.rs`
 **Root Cause:** The method `self.render_context.update()` returns a `Result<(), Error>` which we were silently dropping. Rust expects all `Result` variants to be explicitly handled or discarded.
 **Fix:** Chained a `.map_err()` to map the underlying error to our custom `String` error type and propagated it using the `?` operator.
+
+---
+
+## 11. `Connection not initialized yet` panic in layershellev
+**Error:** `thread 'main' panicked at layershellev/layershellev/src/lib.rs:1573:34: Connection not initialized yet`
+**File:** `src-tauri/layershellev/layershellev/src/lib.rs`
+**Root Cause:** In `running_with_proxy_option()`, right before the event loop dispatches `InitRequest`, the library calls `self.connection.take().unwrap()` (line 2453). `.take()` moves the `Connection` out of the `WindowState` struct, setting the `Option` to `None`. When our `InitRequest` handler then called `window_state.get_connection()`, it panicked because the connection had been consumed. Since Wayland `Connection` objects are `Arc`-wrapped and cheap to clone (layershellev itself clones them internally for `CursorUpdateContext`), using `.clone()` instead of `.take()` is safe.
+**Fix:** Changed `self.connection.take().unwrap()` to `self.connection.clone().unwrap()` in `layershellev/src/lib.rs:2453`.
+
+---
+
+## 12. `You cannot return this one` panic (missing use_display_handle)
+**Error:** `thread 'main' panicked at layershellev/layershellev/src/lib.rs:3031:29: You cannot return this one`
+**File:** `src-tauri/src/platform/linux/wayland/layer_shell/surface.rs`
+**Root Cause:** When `use_display_handle` is `false` (the default), `layershellev` expects each surface unit to provide a software `WlBuffer` via the `RequestBuffer` event. Since we use hardware EGL rendering and our catch-all handler returns `ReturnData::None` instead of `ReturnData::WlBuffer(...)`, the library panics. Setting `use_display_handle = true` tells layershellev to skip the software buffer path entirely, deferring all rendering control to the caller.
+**Fix:** Added `.with_use_display_handle(true)` to the `WindowState` builder chain in `surface.rs`.
+
+---
+
+## 13. Missing `report_swap()` causing 30-second process death
+**Error:** cl-video-player process dies after ~30 seconds of rendering, no error message, likely OOM-killed.
+**File:** `src-tauri/src/platform/linux/runner/mpv.rs`
+**Root Cause:** After rendering a frame and calling `eglSwapBuffers()`, we were calling `render_context.update()` instead of `render_context.report_swap()`. The `update()` method checks if a new frame is available (a pre-render query), while `report_swap()` informs libmpv that the buffer was actually presented to the compositor. Without `report_swap()`, libmpv accumulates GL fence objects and internal sync resources for every rendered frame, causing a memory leak. Additionally, we had no frame throttling, so MPV's update callback fired at unlimited speed, flooding the compositor. Combined, these caused OOM-kill or compositor-initiated client termination after ~30 seconds.
+**Fix:** (1) Moved `update()` to be a pre-check before `render()`, only rendering when the `Frame` flag is set. (2) Replaced the post-render `update()` call with `report_swap()`. (3) Added timestamp-based frame throttling (16ms minimum interval, ~60fps cap). (4) Added `glViewport()` call before render to fix video not filling the monitor surface. (5) Added `gl::load_with()` in `egl.rs` to load GL function pointers via EGL.

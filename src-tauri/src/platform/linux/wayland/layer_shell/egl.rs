@@ -60,6 +60,16 @@ impl EglContext {
         egl.make_current(display, None, None, Some(context))
             .map_err(|e| format!("Failed to make EGL context current (surfaceless): {:?}", e))?;
 
+        // load OpenGL function pointers from the EGL loader.
+        // the `gl` crate is a static dispatch table that starts as all null pointers;
+        // gl::load_with fills it by calling eglGetProcAddress for each GL symbol.
+        // this must happen after make_current so the GL context is active.
+        gl::load_with(|name| {
+            egl.get_proc_address(name)
+                .map(|f| f as *const std::ffi::c_void)
+                .unwrap_or(std::ptr::null())
+        });
+
         Ok(Self {
             egl,
             display,

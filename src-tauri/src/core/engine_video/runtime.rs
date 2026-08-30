@@ -77,8 +77,8 @@ pub fn set_video_wallpaper(
         .arg(shell_arg)
         .arg("--socket")
         .arg(&socket_path)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .process_group(0)
         .spawn()
         .map_err(|e| format!("failed to spawn cl-video-player: {}", e))?;

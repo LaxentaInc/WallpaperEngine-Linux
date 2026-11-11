@@ -1,5 +1,5 @@
 // layer_shell::egl - EGL context management
-//
+// 
 // handles initializing an EGL display from a raw Wayland display pointer,
 // creating a surfaceless EGL context, and binding it to a wl_egl_window.
 

@@ -18,8 +18,9 @@ jobs:
 
       - name: Extract search keywords
         id: keywords
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v2
         with:
+          model: 'openai/gpt-4o-mini'
           prompt: |
             You are a codebase search assistant. Analyze the issue title and body below and extract a list of keywords to grep the codebase for context.
             CRITICAL: You must extract at least 2 keywords (up to 8). If the issue mentions a specific term (e.g., 'libmpv'), do not just output that one term. Also include related architectural terms, synonyms, or nested concepts that might provide better context.

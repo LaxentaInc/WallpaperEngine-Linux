@@ -79,18 +79,25 @@ fn main() {
         loop_playback: true, // TODO: REMOVE FROM SETTINGS, WE KEEP IT ON BY DEFAULT, NOT CONFIGRABLE
         volume: 0,
     };
-   // dummy MonitorInfo struct before passing it to run_player so the bin no die
-   // we haVE NOT IMPLEMENTED THIS YET
-    let monitor_info = colorwall_linux_lib::platform::linux::shared::types::MonitorInfo {
-        id: monitor_id.clone(),
-        name: monitor_id.clone(),
-        x: 0,
-        y: 0,
-        width: 1920,
-        height: 1080,
-        scale: 1.0,
-        primary: true,
-    };
+    // query connected monitors from the wayland compositor using our new enumerator.
+    // if a matching monitor is found for monitor_id, use its real geometry and connector name;
+    // otherwise fallback to the primary monitor or a safe default.
+    let monitor_info = colorwall_linux_lib::platform::linux::wayland::layer_shell::monitors::enumerate()
+        .ok()
+        .and_then(|list| {
+            list.into_iter()
+                .find(|m| m.id == monitor_id || m.name == monitor_id || (monitor_id == "primary" && m.primary))
+        })
+        .unwrap_or_else(|| colorwall_linux_lib::platform::linux::shared::types::MonitorInfo {
+            id: monitor_id.clone(),
+            name: monitor_id.clone(),
+            x: 0,
+            y: 0,
+            width: 1920,
+            height: 1080,
+            scale: 1.0,
+            primary: true,
+        });
 
     match shell_type.as_str() {
         "layer-shell" => {

@@ -55,21 +55,24 @@ pub fn run_player(monitor: &MonitorInfo, config: &MpvConfig, socket_path: String
     // log the full layer-shell configuration for diagnostics
     log_layer_config(monitor);
 
-    // set up the layershellev state
-    // with_xdg_output_name targets the specific monitor by its xdg output name
-    // (e.g. "HDMI-A-1", "eDP-1") which MonitorInfo.name already provides.
-    // with_events_transparent makes the surface ignore all pointer/keyboard input,
-    // so clicks fall through to desktop icons on the layer above.
-    let ev: WindowState<()> = WindowState::new("colorwall-linux")
+    // set up the layershellev state.
+    // with_events_transparent makes the surface ignore all pointer and keyboard input,
+    // allowing user clicks to fall through to desktop icons on the layer above.
+    let mut builder = WindowState::new("colorwall-linux")
         .with_layer(Layer::Background)
         .with_anchor(Anchor::Bottom | Anchor::Left | Anchor::Right | Anchor::Top)
         .with_exclusive_zone(-1)
         .with_keyboard_interacivity(KeyboardInteractivity::None)
-        // temporarily disabled: monitor.name is a dummy string ("primary") which 
-        // causes Wayland to reject the layer. falling back to default monitor.
-        // .with_xdg_output_name(monitor.name.clone())
         .with_events_transparent(true)
-        .with_use_display_handle(true)
+        .with_use_display_handle(true);
+
+    // target specific output if a concrete xdg output name is provided.
+    // if primary or empty, layershellev defaults to the active screen.
+    if !monitor.name.is_empty() && monitor.name != "primary" && monitor.name != "default" {
+        builder = builder.with_xdg_output_name(monitor.name.clone());
+    }
+
+    let ev: WindowState<()> = builder
         .build()
         .map_err(|e| format!("Failed to build WindowState: {:?}", e))?;
 

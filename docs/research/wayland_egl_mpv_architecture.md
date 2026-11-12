@@ -38,3 +38,18 @@ We originally attempted to use `layershellev` out-of-the-box. However, high-leve
 1. `WindowState::get_connection()`: To get the raw `wl_display*` for `eglGetPlatformDisplay`.
 2. `WindowStateUnit::get_wlsurface()`: To get the `WlSurface` proxy to create the `WlEglSurface`.
 3. Re-exporting `Layer`, `Anchor`, etc. as public so our downstream code can configure the shell.
+
+// ------------------ obv layershellev has output bindings too! //
+```rs
+pub struct ZxdgOutputInfo {
+    pub name: String,
+    pub description: String,
+    pub zxdgoutput: ZxdgOutputV1,
+    pub logical_size: (i32, i32),
+    pub position: (i32, i32),
+}```
+
+// line 979 of layershellev/src/lib.rs:
+```rs
+xdg_info_cache: Vec<(wl_output::WlOutput, ZxdgOutputInfo)>
+```

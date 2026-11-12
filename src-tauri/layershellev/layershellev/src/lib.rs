@@ -214,8 +214,6 @@ use wayland_protocols::xdg::decoration::zv1::client::{
 };
 
 pub use calloop;
-pub use wayland_client;
-pub use wayland_backend;
 use calloop::{
     Error as CallLoopError, EventLoop, LoopHandle, RegistrationToken,
     channel::{self, Channel},
@@ -224,6 +222,8 @@ use calloop::{
 use calloop_wayland_source::WaylandSource;
 use std::collections::HashMap;
 use std::fmt::Debug;
+pub use wayland_backend;
+pub use wayland_client;
 
 use std::fmt::Formatter;
 use std::time::Duration;
@@ -327,6 +327,16 @@ impl ZxdgOutputInfo {
     /// you can get the LogicalPosition of the screen current surface in
     pub fn get_logical_size(&self) -> (i32, i32) {
         self.logical_size
+    }
+
+    // returns the xdg output connector name such as hdmi-a-1 or edp-1 for monitor targeting.
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    // returns the human-readable description of the monitor containing make and model.
+    pub fn get_description(&self) -> &str {
+        &self.description
     }
 }
 
@@ -975,7 +985,7 @@ pub struct WindowState<T> {
     finger_locations: HashMap<i32, (f64, f64)>,
     enter_serial: Option<u32>,
     button_serial: Option<u32>,
-
+    // this
     xdg_info_cache: Vec<(wl_output::WlOutput, ZxdgOutputInfo)>,
 
     start_mode: StartMode,
@@ -1465,7 +1475,8 @@ impl<T> WindowState<T> {
         self
     }
 }
-
+// WINDOW STATE impl :> FOUND IT EIHIIHIHIHHIIHHIHIH
+// EHIHIHIIHHIHIHIEHIIHHIIHHIHIHIHIHIHIHIHIWHHAHAHAHAHAHHWHEHEAEAWEHAEHAHE
 impl<T> Default for WindowState<T> {
     fn default() -> Self {
         Self {
@@ -1570,10 +1581,12 @@ impl<T> WindowState<T> {
     /// raw c-level wl_display* pointer via connection.backend().display_ptr(),
     /// which eglGetPlatformDisplay requires for egl initialization.
     pub fn get_connection(&self) -> &Connection {
-        self.connection.as_ref().expect("Connection not initialized yet")
+        self.connection
+            .as_ref()
+            .expect("Connection not initialized yet")
     }
 
-    /// it return the iter of units. you can do loop with it
+    /// it returns the iter of units. you can do loop with it
     pub fn get_unit_iter(&self) -> impl Iterator<Item = &WindowStateUnit<T>> {
         self.units.iter()
     }
@@ -1670,7 +1683,7 @@ impl<T: 'static> OutputHandler for WindowState<T> {
         _qh: &QueueHandle<Self>,
         output: wl_output::WlOutput,
     ) {
-        self.outputs.push(output.clone());
+        self.outputs.push(output.clone()); /*<-- THIS IS WHERE ALL MONITORS ENTER THE VEC! REFER TO THE EOF*/
         self.message
             .push((None, DispatchMessageInner::NewDisplay(output)));
     }
@@ -3284,4 +3297,54 @@ fn set_cursor_shape<T: 'static>(
         );
         cursor_surface.commit();
     }
+}
+// new helper function (not included by layershellev, the whole crate is modified and maintained)
+// writting this here so in future i don't loose track of what i modified and what original code had, And also isolate issues.
+// and ofc also not forget.
+// connects to the wayland compositor and queries all outputs(populates xdg_info_cache) via zxdg_output_manager.
+// returns logical geometry, position, and connector names without spawning surfaces or windows.
+pub fn enumerate_monitors() -> Result<Vec<ZxdgOutputInfo>, LayerEventError> {
+    let connection = Connection::connect_to_env()?;
+    let (globals, mut event_queue) = registry_queue_init::<WindowState<()>>(&connection)?;
+    let qh = event_queue.handle();
+    // its xdg_info_cache is gonna be empty
+    // we will then give it to event queue and it will wait for wayland's ZxdgOutputManagerV1 to output it. 
+    // state is now WindowState, containing all of its inside registeries and vectors or whatever it contains.
+    // we only use 2 of them i think the info cache and the outputs.
+    let mut state = WindowState::<()>::new("Life-Death");
+    state.output_state = Some(OutputState::new(&globals, &qh));
+
+    let xdg_output_manager = globals.bind::<ZxdgOutputManagerV1, _, _>(&qh, 1..=3, ())?;
+    // i am going to explode, xdg_output_manager Does NOT Have a List Monitors Function
+    // so we first call the raw wayland protocol to GET THE MONITORS, THEN WE CALL THE EXTENSION WOW
+    // first dispatch processes wl_output advertisements from the registry and populates state.outputs (inside state.xdg_info_cache).
+    // and populates every display that exists inside state.outputs!
+    event_queue.blocking_dispatch(&mut state)?;
+    // now state.xdg_info_cache has all the tuff data for each discovered physical display
+    // refer to LINE 1686
+    for output_display in &state.outputs {
+        let zxdgoutput = xdg_output_manager.get_xdg_output(output_display, &qh, ());
+        state
+            .xdg_info_cache
+            .push((output_display.clone(), ZxdgOutputInfo::new(zxdgoutput)));
+    }
+
+    // Second dispatch receives logical dimensions, position, and connector names for each output from the extension `xdg_output_manager``.
+    /* Wayland-client listens to the incoming socket messages from the compositor.
+     The compositor sends 4 events:
+
+    Event::Name { "HDMI-NuUh-1" }
+    Event::Description { "LG Or SUM..." }
+    Event::LogicalSize { 1920, 1080 }
+    Event::LogicalPosition { 0, 0 }
+    wayland-client automatically passes those events into that 
+    Dispatch<ZxdgOutputV1>::event(...) block in layershellev/src/lib.rs (line 1835). */
+    event_queue.blocking_dispatch(&mut state)?;
+
+    let results = state
+        .xdg_info_cache
+        .into_iter()
+        .map(|(_, info)| info)
+        .collect();
+    Ok(results)
 }

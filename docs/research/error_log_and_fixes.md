@@ -108,3 +108,14 @@ This document serves as a historical log of every technical hurdle, compilation 
 **File:** `src-tauri/src/platform/linux/runner/mpv.rs`
 **Root Cause:** After rendering a frame and calling `eglSwapBuffers()`, we were calling `render_context.update()` instead of `render_context.report_swap()`. The `update()` method checks if a new frame is available (a pre-render query), while `report_swap()` informs libmpv that the buffer was actually presented to the compositor. Without `report_swap()`, libmpv accumulates GL fence objects and internal sync resources for every rendered frame, causing a memory leak. Additionally, we had no frame throttling, so MPV's update callback fired at unlimited speed, flooding the compositor. Combined, these caused OOM-kill or compositor-initiated client termination after ~30 seconds.
 **Fix:** (1) Moved `update()` to be a pre-check before `render()`, only rendering when the `Frame` flag is set. (2) Replaced the post-render `update()` call with `report_swap()`. (3) Added timestamp-based frame throttling (16ms minimum interval, ~60fps cap). (4) Added `glViewport()` call before render to fix video not filling the monitor surface. (5) Added `gl::load_with()` in `egl.rs` to load GL function pointers via EGL.
+
+
+---
+
+## 14. `XdgWmBase` Version Mismatch & WSLg Missing Layer Shell
+**Error:** `layer-shell error: Failed to build WindowState: BindError(UnsupportedVersion)`
+**File:** `src-tauri/layershellev/layershellev/src/lib.rs`
+**Root Cause:** `layershellev`'s `WindowState::build()` hardcoded the protocol binding requirement for `XdgWmBase` to `2..=6`. The default Weston compositor running under Microsoft WSLg only advertises `xdg_wm_base` version `1`. Because version 1 was below the requested minimum (2), the Wayland client library returned `BindError(UnsupportedVersion)`. Additionally, WSLg is an RDP application window forwarder and does not advertise the `zwlr_layer_shell_v1` protocol at all, causing subsequent `unwrap()` panics on missing globals.
+**Fix:**
+1. Changed `globals.bind::<XdgWmBase, _, _>(&qh, 2..=6, ())?` to `1..=6` in `layershellev/src/lib.rs` to allow compatibility with compositors exposing `xdg_wm_base` version 1.
+2. Ran a lightweight nested wlroots compositor (`labwc`) inside WSLg to provide native `zwlr_layer_shell_v1` support for desktop-background video playback.

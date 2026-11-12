@@ -2188,7 +2188,16 @@ impl<T: 'static> WindowState<T> {
         let shm = globals.bind::<WlShm, _, _>(&qh, 1..=1, ())?;
         self.shm = Some(shm);
         self.seat_back = Some(globals.bind::<WlSeat, _, _>(&qh, 1..=1, ())?);
+        // demands xdg_wm_base to be version 2 to 6, and since we are in a windows wsl vm we have 1 :c
+        // thats why it threw that bind unspupported version when called in WindowState it's so hard to know whats happening
+        // with the tuff rust analyzer, my ram gonna explode if i used it rn, the vm and 10 apps will die :<
 
+        /* WlCompositor: requires version 1..=5 (alla are listed here anyways, but for ease of finding, noted here.)
+        WlShm: requires version 1..=1
+        WlSeat: requires version 1..=1
+        XdgWmBase: requires version 2..=6
+        ZxdgOutputManagerV1: requires version 1..=3
+        ZwlrLayerShellV1: requires version 3..=4 */
         let wmbase = globals.bind::<XdgWmBase, _, _>(&qh, 2..=6, ())?;
         self.wmbase = Some(wmbase);
 

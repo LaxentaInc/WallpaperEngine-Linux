@@ -20,15 +20,14 @@ jobs:
         id: keywords
         uses: actions/ai-inference@v2
         with:
-          model: 'gpt-4o-mini'
+          model: 'openai/gpt-4o-mini'
+          token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             You are a codebase search assistant. Analyze the issue title and body below and extract a list of keywords to grep the codebase for context.
             CRITICAL: You must extract at least 2 keywords (up to 8). If the issue mentions a specific term (e.g., 'libmpv'), do not just output that one term. Also include related architectural terms, synonyms, or nested concepts that might provide better context.
             Output ONLY a newline-separated list of raw keywords/phrases (one per line) without quotes, bullets, or extra text. If no keyword is applicable, output "None".
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Search codebase
         id: search
@@ -60,8 +59,9 @@ jobs:
         id: inference
         uses: actions/ai-inference@v2
         with:
-          model: 'gpt-4o'
-          max-completion-tokens: 2000
+          model: 'openai/gpt-4o'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max-tokens: 2000
           prompt: |
             You are reviewing a new issue to facilitate the devs to find the related code quickly, do nothing extraordinary. Keep.
             
@@ -72,18 +72,16 @@ jobs:
             **Summary**: [1 sentence summary]
             
             **Relevant Locations, quick points so the dev can find it, don't need to explain anything**:
-            CRITICAL INSTRUCTION: You MUST format EVERY single location as a clickable markdown link using this EXACT syntax: `[filepath:line](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/filepath#Lline)`. If you output raw text like `file.rs:10`, you have failed.
+            CRITICAL INSTRUCTION: You MUST format EVERY single location as a clickable markdown link using this EXACT syntax: `filepath:line`. If you output raw text like `file.rs:10`, you have failed.
             - List all matches. Do not include verbose descriptions. Keep it dense.
             
             Code Search Results given by system:
             ```
-            ${{ steps.search.outputs.results }}
+            \${{ steps.search.outputs.results }}
             ```
             
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment with AI summary
         run: |

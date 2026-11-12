@@ -2272,7 +2272,7 @@ impl<T: 'static> WindowState<T> {
 
             let wl_surface = wmcompositer.create_surface(&qh, ()); // and create a surface. if two or more,
             let layer_shell = globals
-                .bind::<ZwlrLayerShellV1, _, _>(&qh, 3..=4, ())
+                .bind::<ZwlrLayerShellV1, _, _>(&qh, 3..=4, ()) // well the piece of garbage wsl doesn't have this
                 .unwrap();
             let layer = layer_shell.get_layer_surface(
                 &wl_surface,

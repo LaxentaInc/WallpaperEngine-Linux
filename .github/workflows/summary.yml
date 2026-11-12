@@ -9,25 +9,33 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      models: read
       contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
       - name: Extract search keywords
         id: keywords
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v1
         with:
-          model: 'openai/gpt-4o-mini'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          model: 'gpt-4o-mini'
           prompt: |
             You are a codebase search assistant. Analyze the issue title and body below and extract a list of keywords to grep the codebase for context.
             CRITICAL: You must extract at least 2 keywords (up to 8). If the issue mentions a specific term (e.g., 'libmpv'), do not just output that one term. Also include related architectural terms, synonyms, or nested concepts that might provide better context.
             Output ONLY a newline-separated list of raw keywords/phrases (one per line) without quotes, bullets, or extra text. If no keyword is applicable, output "None".
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
 
       - name: Search codebase
         id: search
@@ -39,7 +47,6 @@ jobs:
             KEYWORD=$(echo "$RAW_KEYWORD" | xargs)
             if [ "$KEYWORD" != "None" ] && [ -n "$KEYWORD" ]; then
               echo "--- search results for: $KEYWORD ---" >> search_results.txt
-              # targets only actual source code and the critical error log, excluding noisy root markdowns. increased context cap to 60 lines (approx 12 blocks) per keyword to feed the ai more code without breaching the 8k token ceiling.
               MATCHES=$(git grep -i -n -C 2 -e "$KEYWORD" -- "*.rs" "*.ts" "*.tsx" "*.js" "*.css" "*.toml" "*.json" "docs/research/error_log_and_fixes.md" 2>/dev/null | head -n 60 | cut -c 1-120 || true)
               if [ -n "$MATCHES" ]; then
                 echo "$MATCHES" >> search_results.txt
@@ -57,11 +64,9 @@ jobs:
 
       - name: Run final AI inference
         id: inference
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v1
         with:
-          model: 'openai/gpt-4o'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max-tokens: 2000
+          model: 'gpt-4o'
           prompt: |
             You are reviewing a new issue to facilitate the devs to find the related code quickly, do nothing extraordinary. Keep.
             
@@ -82,6 +87,8 @@ jobs:
             
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
 
       - name: Comment with AI summary
         run: |

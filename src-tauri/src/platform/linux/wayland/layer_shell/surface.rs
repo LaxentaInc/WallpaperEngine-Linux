@@ -6,7 +6,7 @@
 // this file is the primary diagnostic surface for debugging compositor
 // interactions. every lifecycle event, layer configuration, and render
 // state is logged with full detail so we never have to guess what the
-// compositor is doing.
+// compositor is doing. 
 
 use layershellev::{
     Anchor, KeyboardInteractivity, Layer, LayerShellEvent, ReturnData, WindowState,
